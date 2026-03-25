@@ -1,4 +1,8 @@
 [workspace]
 members = ["frontend", "backend"]
-resolver = "1"
+resolver = "2"
+
+[workspace.dependencies]
+serde = "1.0.228"
+
 
