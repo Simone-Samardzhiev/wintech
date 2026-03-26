@@ -38,3 +38,15 @@ main {
     padding: 20px;
 }
 
+.not-found-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    width: 100%;
+}
+
+.not-found-img {
+    max-width: 100%;
+    height: auto;
+}
