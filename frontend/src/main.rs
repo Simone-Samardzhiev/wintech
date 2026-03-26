@@ -1,21 +1,26 @@
-use leptos::ev;
-use leptos::html::{button, div, h1, p};
+mod home;
+mod order;
+
 use leptos::prelude::*;
+use leptos_router::components::{A, Route, Router, Routes};
+use leptos_router::path;
 
 #[component]
 fn App() -> impl IntoView {
-    let counter = RwSignal::new(0);
-
-    div().child((
-        h1().child("Hello from Rust!"),
-        button()
-            .on(ev::click, move |_| *counter.write() += 1)
-            .child("Increment"),
-        button()
-            .on(ev::click, move |_| *counter.write() -= 1)
-            .child("Decrement"),
-        p().child(("Counter: ", counter)),
-    ))
+    view! {
+        <Router>
+            <nav>
+                <A href="/">"Home"</A>
+                <A href="/order">"Order"</A>
+            </nav>
+            <main>
+                <Routes fallback=|| view! { "Not found" }>
+                    <Route path=path!("/") view=home::Home/>
+                    <Route path=path!("/order") view=order::Order />
+                </Routes>
+            </main>
+        </Router>
+    }
 }
 
 fn main() {
