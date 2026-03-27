@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/backend/src/lib/adapter/postgres/user.rs" value="09cb70e0-849f-43de-b6e8-c3d32c3f6560" />
+  </component>
+</project>
