@@ -5,21 +5,26 @@ use crate::domain::user::service::UserService;
 use axum::routing::post;
 use serde::Serialize;
 use std::sync::Arc;
+use time::Duration;
 use tower_http::services::{ServeDir, ServeFile};
 
-pub struct Services<U>
+pub struct AppState<U>
 where
     U: UserService,
 {
     pub user_service: U,
+    pub cookie_expiry: Duration,
 }
 
-impl<U> Services<U>
+impl<U> AppState<U>
 where
     U: UserService,
 {
-    pub fn new(user_service: U) -> Self {
-        Self { user_service }
+    pub fn new(user_service: U, cookie_expiry: Duration) -> Self {
+        Self {
+            user_service,
+            cookie_expiry,
+        }
     }
 }
 
@@ -29,7 +34,7 @@ where
 {
     address: String,
     frontend_path: String,
-    services: Services<U>,
+    state: AppState<U>,
 }
 
 #[derive(Serialize)]
@@ -53,16 +58,16 @@ impl<U> Router<U>
 where
     U: UserService,
 {
-    pub fn new(config: Config, services: Services<U>) -> Self {
+    pub fn new(config: Config, state: AppState<U>) -> Self {
         Router {
             address: config.address,
             frontend_path: config.frontend_path,
-            services,
+            state,
         }
     }
 
     pub async fn listen(self) -> anyhow::Result<()> {
-        let state = Arc::new(self.services);
+        let state = Arc::new(self.state);
 
         let router =
             axum::Router::new()
@@ -70,7 +75,9 @@ where
                     "/api/v1",
                     axum::Router::new().nest(
                         "/users",
-                        axum::Router::new().route("/register", post(user::register)),
+                        axum::Router::new()
+                            .route("/register", post(user::register))
+                            .route("/login", post(user::login)),
                     ),
                 )
                 .fallback_service(ServeDir::new(&self.frontend_path).not_found_service(

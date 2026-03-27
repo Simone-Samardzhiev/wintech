@@ -39,6 +39,12 @@ pub enum UserError {
     #[error("Email address ({0}) already exists")]
     EmailAlreadyExists(String),
 
+    #[error("User with email ({0}) does not exist")]
+    UserNotFoundByEmail(String),
+
+    #[error("Wrong credentials")]
+    WrongCredentials,
+
     #[error("Unknown error")]
     Unknown(#[from] anyhow::Error),
 }
@@ -229,5 +235,66 @@ impl RegisterRequest {
             email: email.unwrap(),
             password: password.unwrap(),
         })
+    }
+}
+
+#[derive(Debug)]
+pub enum TokenKind {
+    Access,
+    Refresh,
+}
+
+impl AsRef<str> for TokenKind {
+    fn as_ref(&self) -> &str {
+        match self {
+            TokenKind::Access => "access",
+            TokenKind::Refresh => "refresh",
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Token {
+    pub id: Uuid,
+    pub kind: TokenKind,
+    pub expiry: time::OffsetDateTime,
+    pub user_id: Uuid,
+}
+
+impl Token {
+    pub fn new(id: Uuid, kind: TokenKind, expiry: time::OffsetDateTime, user_id: Uuid) -> Self {
+        Self {
+            id,
+            kind,
+            expiry,
+            user_id,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct LoginRequest {
+    pub email: String,
+    pub password: String,
+}
+
+impl LoginRequest {
+    pub fn new(email: String, password: String) -> Self {
+        Self { email, password }
+    }
+}
+
+#[derive(Debug)]
+pub struct Tokens {
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
+impl Tokens {
+    pub fn new(access_token: String, refresh_token: String) -> Self {
+        Self {
+            access_token,
+            refresh_token,
+        }
     }
 }

@@ -2,7 +2,7 @@ use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-use backend::adapter::{http, password_hasher, postgres};
+use backend::adapters::{http, password_hashers, postgres, token_hashers};
 use backend::config::Config;
 use backend::domain;
 
@@ -25,9 +25,14 @@ async fn main() {
     let pool = postgres::connect(&config.database_url).await.unwrap();
 
     let user_repository = postgres::user::UserRepository::new(pool.clone());
+    let token_repository = postgres::user::TokenRepository::new(pool.clone());
     let user_service = domain::user::service::DefaultUserService::new(
         user_repository,
-        password_hasher::ArgonPasswordHasher,
+        token_repository,
+        password_hashers::ArgonPasswordHasher,
+        token_hashers::JWTTokenHasher::new(config.jwt_secret.clone()),
+        config.jwt_refresh_expiry,
+        config.jwt_access_expiry,
     );
 
     tracing::info!(
@@ -36,7 +41,7 @@ async fn main() {
         "Starting server"
     );
 
-    let services = http::Services::new(user_service);
+    let services = http::AppState::new(user_service, config.jwt_refresh_expiry);
     let router = http::Router::new(config, services);
 
     router.listen().await.unwrap();

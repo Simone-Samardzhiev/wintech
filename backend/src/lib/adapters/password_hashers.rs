@@ -7,7 +7,7 @@ use argon2::{PasswordHasher, PasswordVerifier};
 pub struct ArgonPasswordHasher;
 
 impl crate::domain::user::ports::PasswordHasher for ArgonPasswordHasher {
-    fn hash_password(&self, password: &str) -> Result<String, UserError> {
+    fn hash(&self, password: &str) -> Result<String, UserError> {
         let argon = argon2::Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
 
@@ -19,9 +19,8 @@ impl crate::domain::user::ports::PasswordHasher for ArgonPasswordHasher {
         Ok(hash.to_string())
     }
 
-    fn verify_password(&self, password: &str, hash: &str) -> Result<bool, UserError> {
+    fn verify(&self, password: &str, hash: &str) -> Result<bool, UserError> {
         let parsed_hash = argon2::password_hash::PasswordHash::new(hash)
-            .map_err(|e| anyhow!("Invalid hash format: {}", e))
             .context("Failed to parse stored hash")?;
 
         let result = argon2::Argon2::default().verify_password(password.as_bytes(), &parsed_hash);
@@ -29,7 +28,9 @@ impl crate::domain::user::ports::PasswordHasher for ArgonPasswordHasher {
         match result {
             Ok(_) => Ok(true),
             Err(argon2::password_hash::Error::Password) => Ok(false),
-            Err(e) => Err(UserError::Unknown(anyhow!("Verification error: {}", e))),
+            Err(e) => Err(UserError::Unknown(
+                anyhow!(e).context("Failed to verify password"),
+            )),
         }
     }
 }

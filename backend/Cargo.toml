@@ -15,18 +15,21 @@ path = "src/bin/api/main.rs"
 [dependencies]
 tokio = { version = "1.50.0", features = ["full"] }
 axum = "0.8.8"
-sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid"] }
+axum-extra = { version = "0.12.5", features = ["cookie"] }
+sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid", "time"] }
 tower-http = { version = "0.6.8", features = ["fs"] }
 dotenv = "0.15.0"
 
 serde = { workspace = true }
 uuid = { workspace = true }
+time = { workspace = true }
 
 anyhow = "1.0.102"
 thiserror = "2.0.18"
 
 email_address = "0.2.9"
 argon2 = { version = "0.5.3", features = ["std"] }
+jsonwebtoken =  {version = "10.3.0", features = ["rust_crypto"]}
 
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
