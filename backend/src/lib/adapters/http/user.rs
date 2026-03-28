@@ -18,7 +18,7 @@ use time::OffsetDateTime;
 impl IntoResponse for UserError {
     fn into_response(self) -> Response {
         let (status, message, details) = match self {
-            UserError::ValidationError(errors) => {
+            UserError::InvalidRegisterRequest(errors) => {
                 let details: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
 
                 (

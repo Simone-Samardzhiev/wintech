@@ -7,14 +7,14 @@ pub enum UserValidationError {
     #[error("Invalid email address")]
     InvalidEmailAddress,
 
-    #[error("Invalid name length (min:{min}, max:{max}, actual:{actual})")]
+    #[error("Invalid username length (min: {min}, max: {max}, actual: {actual})")]
     InvalidUsernameLength {
         min: usize,
         max: usize,
         actual: usize,
     },
 
-    #[error("Invalid password length (min:{min}, max:{max}, actual:{actual})")]
+    #[error("Invalid password length (min: {min}, max: {max}, actual: {actual})")]
     InvalidPasswordLength {
         min: usize,
         max: usize,
@@ -35,8 +35,8 @@ pub enum UserValidationError {
 /// User related errors.
 #[derive(Error, Debug)]
 pub enum UserError {
-    #[error("Invalid user")]
-    ValidationError(Vec<UserValidationError>),
+    #[error("Invalid register request")]
+    InvalidRegisterRequest(Vec<UserValidationError>),
 
     #[error("Email address ({0}) already exists")]
     EmailAlreadyExists(String),
@@ -216,7 +216,7 @@ impl User {
         let name = Username::parse(name).map_err(|e| errs.push(e)).ok();
         let email = UserEmail::parse(email).map_err(|e| errs.push(e)).ok();
         if !errs.is_empty() {
-            return Err(UserError::ValidationError(errs));
+            return Err(UserError::InvalidRegisterRequest(errs));
         }
         Ok(Self {
             id,
@@ -244,7 +244,7 @@ impl RegisterRequest {
         let password = UserPassword::parse(password).map_err(|e| errs.push(e)).ok();
 
         if !errs.is_empty() {
-            return Err(UserError::ValidationError(errs));
+            return Err(UserError::InvalidRegisterRequest(errs));
         }
         Ok(Self {
             name: name.unwrap(),
