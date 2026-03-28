@@ -1,10 +1,8 @@
-use crate::adapters::http::AppState;
-use crate::domain::user::models::UserError;
-use crate::domain::user::ports::TokenCoder;
-use crate::domain::user::service::UserService;
-use axum::body::Body;
-use axum::extract::State;
-use axum::{http::Request, middleware::Next, response::Response};
+use crate::{
+    adapters::http::AppState,
+    domain::user::{models::UserError, ports::TokenCoder, service::UserService},
+};
+use axum::{body::Body, extract::State, http::Request, middleware::Next, response::Response};
 use axum_extra::extract::CookieJar;
 use std::sync::Arc;
 

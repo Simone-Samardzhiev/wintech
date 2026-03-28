@@ -1,8 +1,10 @@
 mod middleware;
 mod user;
 
-use crate::config::Config;
-use crate::domain::{user::ports::TokenCoder, user::service::UserService};
+use crate::{
+    config::Config,
+    domain::{user::ports::TokenCoder, user::service::UserService},
+};
 use axum::{middleware::from_fn_with_state, routing::post};
 use serde::Serialize;
 use std::sync::Arc;

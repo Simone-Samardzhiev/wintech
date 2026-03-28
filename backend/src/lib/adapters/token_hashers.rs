@@ -1,5 +1,7 @@
-use crate::domain::user::models::{Token, TokenKind, UserError};
-use crate::domain::user::ports::TokenCoder;
+use crate::domain::user::{
+    models::{Token, TokenKind, UserError},
+    ports::TokenCoder,
+};
 use anyhow::Context;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header};
 use serde::{Deserialize, Serialize};

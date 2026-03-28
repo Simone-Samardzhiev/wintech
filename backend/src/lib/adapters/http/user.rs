@@ -1,7 +1,9 @@
-use super::AppState;
-use super::ErrorResponse;
-use crate::domain::user::models::Token;
-use crate::domain::user::{models::UserError, ports::TokenCoder, service::UserService};
+use super::{AppState, ErrorResponse};
+use crate::domain::user::{
+    models::{Token, UserError},
+    ports::TokenCoder,
+    service::UserService,
+};
 use axum::{
     Json,
     extract::{Extension, State},

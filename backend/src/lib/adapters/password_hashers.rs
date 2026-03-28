@@ -1,8 +1,9 @@
 use crate::domain::user::models::UserError;
 use anyhow::{Context, anyhow};
-use argon2::password_hash::SaltString;
-use argon2::password_hash::rand_core::OsRng;
-use argon2::{PasswordHasher, PasswordVerifier};
+use argon2::{
+    PasswordHasher, PasswordVerifier,
+    password_hash::{SaltString, rand_core::OsRng},
+};
 
 /// Implementation of [`crate::domain::user::ports::PasswordHasher`]
 /// using argon2 algorithm.

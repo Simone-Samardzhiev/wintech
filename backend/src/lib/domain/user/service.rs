@@ -1,5 +1,7 @@
-use super::models::{LoginRequest, RegisterRequest, Token, TokenKind, Tokens, User, UserError};
-use super::ports::{PasswordHasher, TokenCoder, TokenRepository, UserRepository};
+use super::{
+    models::{LoginRequest, RegisterRequest, Token, TokenKind, Tokens, User, UserError},
+    ports::{PasswordHasher, TokenCoder, TokenRepository, UserRepository},
+};
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 

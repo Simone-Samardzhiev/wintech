@@ -1,10 +1,9 @@
-use tracing_subscriber::fmt;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-
-use backend::adapters::{http, password_hashers, postgres, token_hashers};
-use backend::config::Config;
-use backend::domain;
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use backend::{
+    adapters::{http, password_hashers, postgres, token_hashers},
+    config::Config,
+    domain,
+};
 
 #[tokio::main]
 async fn main() {
