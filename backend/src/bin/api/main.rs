@@ -30,7 +30,11 @@ async fn main() {
         user_repository,
         token_repository,
         password_hashers::ArgonPasswordHasher,
-        token_hashers::JWTTokenHasher::new(config.jwt_secret.clone()),
+        token_hashers::JWTTokenHasher::new(
+            config.jwt_secret.clone(),
+            config.jwt_issuer.clone(),
+            config.jwt_audience.clone(),
+        ),
         config.jwt_refresh_expiry,
         config.jwt_access_expiry,
     );

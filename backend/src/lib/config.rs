@@ -6,9 +6,13 @@ use time::Duration;
 #[derive(Debug)]
 pub struct Config {
     pub address: String,
+
     pub frontend_path: String,
     pub database_url: String,
+
     pub jwt_secret: String,
+    pub jwt_issuer: String,
+    pub jwt_audience: String,
     pub jwt_refresh_expiry: Duration,
     pub jwt_access_expiry: Duration,
 }
@@ -23,6 +27,10 @@ impl Config {
         let database_url = env::var("DATABASE_URL").context("Failed to get DATABASE_URL")?;
 
         let jwt_secret = env::var("JWT_SECRET").context("Failed to get JWT_SECRET")?;
+
+        let jwt_issuer = env::var("JWT_ISSUER").context("Failed to get JWT_ISSUER")?;
+
+        let jwt_audience = env::var("JWT_AUDIENCE").context("Failed to get JWT_AUDIENCE")?;
 
         let jwt_refresh_expiry = Duration::seconds(
             env::var("JWT_REFRESH_EXPIRY")
@@ -43,6 +51,8 @@ impl Config {
             frontend_path,
             database_url,
             jwt_secret,
+            jwt_issuer,
+            jwt_audience,
             jwt_access_expiry,
             jwt_refresh_expiry,
         })
