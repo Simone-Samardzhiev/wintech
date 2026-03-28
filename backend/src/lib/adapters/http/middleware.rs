@@ -6,6 +6,7 @@ use axum::{body::Body, extract::State, http::Request, middleware::Next, response
 use axum_extra::extract::CookieJar;
 use std::sync::Arc;
 
+/// Function that extracts the JWT token from the [`axum::http::header::AUTHORIZATION`].
 fn get_token_header(req: &Request<Body>) -> Option<String> {
     req.headers()
         .get(axum::http::header::AUTHORIZATION)
@@ -14,6 +15,9 @@ fn get_token_header(req: &Request<Body>) -> Option<String> {
         .map(|h| h.to_string())
 }
 
+/// Function that decodes [`crate::domain::user::models::Token`] from either
+/// the [`axum::http::header::AUTHORIZATION`] or the cookie
+/// and inserts it as extension for the next handler.
 pub async fn jwt_middleware<U, T>(
     State(state): State<Arc<AppState<U, T>>>,
     mut req: Request<Body>,
