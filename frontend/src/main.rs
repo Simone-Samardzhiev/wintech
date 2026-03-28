@@ -1,10 +1,10 @@
 mod home;
-mod order;
 
 use leptos::prelude::*;
 use leptos_router::components::{A, Route, Router, Routes};
 use leptos_router::path;
 
+/// Custom view displayed when a page is not found.
 #[component]
 pub fn NotFound() -> impl IntoView {
     view! {
@@ -15,7 +15,7 @@ pub fn NotFound() -> impl IntoView {
     }
 }
 
-
+/// The app entry point.
 #[component]
 fn App() -> impl IntoView {
     view! {
@@ -27,7 +27,6 @@ fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| view! { <NotFound/> }>
                     <Route path=path!("/") view=home::Home/>
-                    <Route path=path!("/order") view=order::Order />
                 </Routes>
             </main>
         </Router>

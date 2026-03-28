@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 
+/// View that display a feature of the smart window.
 #[component]
 pub fn FeatureCard(
     title: &'static str,
@@ -18,6 +19,7 @@ pub fn FeatureCard(
     }
 }
 
+/// The start/home page.
 #[component]
 pub fn Home() -> impl IntoView {
     view! {
