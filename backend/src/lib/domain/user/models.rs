@@ -1,6 +1,7 @@
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Possible errors from user validation.
 #[derive(Error, Debug)]
 pub enum UserValidationError {
     #[error("Invalid email address")]
@@ -31,6 +32,7 @@ pub enum UserValidationError {
     },
 }
 
+/// User related errors.
 #[derive(Error, Debug)]
 pub enum UserError {
     #[error("Invalid user")]
@@ -49,6 +51,7 @@ pub enum UserError {
     Unknown(#[from] anyhow::Error),
 }
 
+/// Valid username.
 #[derive(Debug)]
 pub struct Username {
     name: String,
@@ -84,6 +87,7 @@ impl From<Username> for String {
     }
 }
 
+/// Valid user email.
 #[derive(Debug)]
 pub struct UserEmail {
     email: String,
@@ -110,6 +114,7 @@ impl From<UserEmail> for String {
     }
 }
 
+/// Valid not hashed user password.
 #[derive(Debug)]
 pub struct UserPassword {
     password: String,
@@ -172,6 +177,7 @@ impl AsRef<str> for UserPassword {
     }
 }
 
+/// Valid user with hashed password.
 #[derive(Debug)]
 pub struct User {
     pub id: Uuid,
@@ -212,6 +218,7 @@ impl User {
     }
 }
 
+/// Request used to register a user.
 #[derive(Debug)]
 pub struct RegisterRequest {
     pub name: Username,
@@ -238,6 +245,7 @@ impl RegisterRequest {
     }
 }
 
+/// Enum representing token types.
 #[derive(Debug)]
 pub enum TokenKind {
     Access,
@@ -253,6 +261,7 @@ impl AsRef<str> for TokenKind {
     }
 }
 
+/// Valid user token.
 #[derive(Debug)]
 pub struct Token {
     pub id: Uuid,
@@ -272,6 +281,7 @@ impl Token {
     }
 }
 
+/// Request used to log in.
 #[derive(Debug)]
 pub struct LoginRequest {
     pub email: String,
@@ -284,6 +294,7 @@ impl LoginRequest {
     }
 }
 
+/// Struct holding refresh and access token from successful login.
 #[derive(Debug)]
 pub struct Tokens {
     pub access_token: String,

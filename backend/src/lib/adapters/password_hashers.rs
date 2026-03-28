@@ -4,6 +4,8 @@ use argon2::password_hash::SaltString;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::{PasswordHasher, PasswordVerifier};
 
+/// Implementation of [`crate::domain::user::ports::PasswordHasher`]
+/// using argon2 algorithm.
 pub struct ArgonPasswordHasher;
 
 impl crate::domain::user::ports::PasswordHasher for ArgonPasswordHasher {

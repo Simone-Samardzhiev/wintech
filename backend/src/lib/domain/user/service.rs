@@ -3,18 +3,35 @@ use super::ports::{PasswordHasher, TokenHasher, TokenRepository, UserRepository}
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
+/// Provides access to user business logic.
 pub trait UserService: Send + Sync + 'static {
+    /// Registers a [`User`]
+    ///
+    /// # Errors
+    /// [`UserError::EmailAlreadyExists`] if the email already exists.
+    ///
+    /// [`UserError::Unknown`] if unexpected error occurs.
     fn register(
         &self,
         request: RegisterRequest,
     ) -> impl Future<Output = Result<(), UserError>> + Send;
 
+    /// Logins a user by credential.
+    ///
+    /// # Returns
+    /// [`Ok(Tokens)`] if the credentials are correct.
+    ///
+    /// # Errors
+    /// [`UserError::WrongCredentials`] if the credentials are incorrect.
+    ///
+    /// [`UserError::Unknown`] if unexpected error occurs.
     fn login(
         &self,
         request: LoginRequest,
     ) -> impl Future<Output = Result<Tokens, UserError>> + Send;
 }
 
+/// Default implementation of [`UserService`].
 pub struct DefaultUserService<UR, TR, P, T>
 where
     UR: UserRepository,

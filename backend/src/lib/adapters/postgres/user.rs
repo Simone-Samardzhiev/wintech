@@ -2,6 +2,11 @@ use crate::domain::user::models::{Token, User, UserError};
 use anyhow::{Context, anyhow};
 use sqlx::{Error, PgPool, Row, query};
 
+/// Implementation of [`crate::domain::user::ports::UserRepository`]
+/// using postgres.
+///
+/// It is safe to clone as it just keeps a pool of connections.
+#[derive(Clone)]
 pub struct UserRepository {
     pool: PgPool,
 }
@@ -63,6 +68,11 @@ impl crate::domain::user::ports::UserRepository for UserRepository {
     }
 }
 
+/// Implementation of [`crate::domain::user::ports::TokenRepository`]
+/// using postgres.
+///
+/// It is safe to clone as it just keeps a pool of connections.
+#[derive(Clone)]
 pub struct TokenRepository {
     pool: PgPool,
 }

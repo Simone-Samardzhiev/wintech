@@ -53,6 +53,7 @@ impl IntoResponse for UserError {
     }
 }
 
+/// Expected request to log in.
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
     username: String,
@@ -60,6 +61,7 @@ pub struct RegisterRequest {
     password: String,
 }
 
+/// Function handling user registration.
 #[tracing::instrument(name = "register_handler", skip(state, payload), fields(username=%payload.username, email=%payload.email))]
 pub async fn register<U>(
     State(state): State<Arc<AppState<U>>>,
@@ -99,12 +101,14 @@ where
     Ok(StatusCode::CREATED)
 }
 
+/// Expected request for login.
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
     email: String,
     password: String,
 }
 
+/// Response from successful login.
 #[derive(Debug, Serialize)]
 pub struct LoginResponse {
     #[serde(rename = "refreshToken")]
@@ -122,6 +126,7 @@ impl From<crate::domain::user::models::Tokens> for LoginResponse {
     }
 }
 
+/// Function handling user login.
 pub async fn login<U>(
     State(state): State<Arc<AppState<U>>>,
     jar: CookieJar,

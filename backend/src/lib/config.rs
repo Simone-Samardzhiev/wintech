@@ -1,6 +1,7 @@
 use anyhow::Context;
 use std::env;
 use time::Duration;
+
 /// Struct holding the configuration variables.
 #[derive(Debug)]
 pub struct Config {

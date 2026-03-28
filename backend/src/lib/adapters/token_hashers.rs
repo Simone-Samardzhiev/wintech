@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
+/// Struct holding JWT claims.
 #[derive(Serialize, Deserialize, Debug)]
 struct Claims {
     id: Uuid,
@@ -25,6 +26,7 @@ impl From<Token> for Claims {
     }
 }
 
+/// Implementation of [`TokenHasher`] using JWT.
 pub struct JWTTokenHasher {
     secret: EncodingKey,
 }
