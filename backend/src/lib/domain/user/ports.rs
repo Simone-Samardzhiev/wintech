@@ -1,4 +1,5 @@
 use super::models::{Token, User, UserError};
+use uuid::Uuid;
 
 /// Provides access to persistent user data.
 pub trait UserRepository: Send + Sync + 'static {
@@ -28,6 +29,15 @@ pub trait TokenRepository: Send + Sync + 'static {
     /// # Errors
     /// [`UserError::Unknown`] if unexpected error occurs.
     fn save(&self, token: &Token) -> impl Future<Output = Result<(), UserError>> + Send;
+
+    /// Deletes [`Token`] by id.
+    ///
+    /// # Errors
+    ///
+    /// [`UserError::TokenNotFoundById`] if no match is found.
+    ///
+    /// [`UserError::Unknown`] if unexpected error occurs.
+    fn delete(&self, id: Uuid) -> impl Future<Output = Result<(), UserError>> + Send;
 }
 
 /// Provides access to password hashing.
@@ -45,6 +55,7 @@ pub trait PasswordHasher: Send + Sync + 'static {
     ///
     /// # Returns
     /// [`Ok(true)`] if the password and the hash matches
+    ///
     /// [`Ok(false)`] if the password and the hash does not match
     ///
     /// # Errors
@@ -52,14 +63,27 @@ pub trait PasswordHasher: Send + Sync + 'static {
     fn verify(&self, password: &str, hash: &str) -> Result<bool, UserError>;
 }
 
-/// Provides access to token hashing.
-pub trait TokenHasher: Send + Sync + 'static {
-    /// Method to hash the token.
+/// Provides access to token encoding and decoding.
+pub trait TokenCoder: Send + Sync + 'static {
+    /// Encodes [`Token`].
     ///
     /// # Returns
     /// [`Ok(String)`] holding the hash.
     ///
     /// # Errors
     /// [`UserError::Unknown`]  if unexpected error occurs.
-    fn hash(&self, token: Token) -> Result<String, UserError>;
+    fn encode(&self, token: &Token) -> Result<String, UserError>;
+
+    /// Decodes [`Token`] from [`str`].
+    ///
+    /// # Returns
+    /// [`Ok(Token)`] holding the token data.
+    ///
+    /// # Errors
+    /// [`UserError::InvalidToken`] if the decoding fails.
+    ///
+    /// [`UserError::InvalidTokenType`] if the token type is invalid.
+    ///
+    /// [`UserError::Unknown`]  if unexpected error occurs.
+    fn decode(&self, token: &str) -> Result<Token, UserError>;
 }

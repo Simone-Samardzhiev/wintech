@@ -47,6 +47,15 @@ pub enum UserError {
     #[error("Wrong credentials")]
     WrongCredentials,
 
+    #[error("Invalid token")]
+    InvalidToken,
+
+    #[error("Invalid token type")]
+    InvalidTokenType,
+
+    #[error("Token with id ({0}) does not exist")]
+    TokenNotFoundById(Uuid),
+
     #[error("Unknown error")]
     Unknown(#[from] anyhow::Error),
 }
@@ -246,7 +255,7 @@ impl RegisterRequest {
 }
 
 /// Enum representing token types.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenKind {
     Access,
     Refresh,
@@ -261,8 +270,19 @@ impl AsRef<str> for TokenKind {
     }
 }
 
+impl TryFrom<&str> for TokenKind {
+    type Error = UserError;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "access" => Ok(TokenKind::Access),
+            "refresh" => Ok(TokenKind::Refresh),
+            _ => Err(UserError::InvalidTokenType),
+        }
+    }
+}
+
 /// Valid user token.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub id: Uuid,
     pub kind: TokenKind,

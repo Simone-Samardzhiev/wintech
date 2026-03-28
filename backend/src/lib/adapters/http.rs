@@ -1,40 +1,46 @@
+mod middleware;
 mod user;
 
 use crate::config::Config;
-use crate::domain::user::service::UserService;
-use axum::routing::post;
+use crate::domain::{user::ports::TokenCoder, user::service::UserService};
+use axum::{middleware::from_fn_with_state, routing::post};
 use serde::Serialize;
 use std::sync::Arc;
 use time::Duration;
 use tower_http::services::{ServeDir, ServeFile};
 
-pub struct AppState<U>
+pub struct AppState<U, T>
 where
     U: UserService,
+    T: TokenCoder,
 {
     pub user_service: U,
+    pub token_coder: T,
     pub cookie_expiry: Duration,
 }
 
-impl<U> AppState<U>
+impl<U, T> AppState<U, T>
 where
     U: UserService,
+    T: TokenCoder,
 {
-    pub fn new(user_service: U, cookie_expiry: Duration) -> Self {
+    pub fn new(user_service: U, token_coder: T, cookie_expiry: Duration) -> Self {
         Self {
             user_service,
+            token_coder,
             cookie_expiry,
         }
     }
 }
 
-pub struct Router<U>
+pub struct Router<U, T>
 where
     U: UserService,
+    T: TokenCoder,
 {
     address: String,
     frontend_path: String,
-    state: AppState<U>,
+    state: AppState<U, T>,
 }
 
 #[derive(Serialize)]
@@ -54,11 +60,12 @@ impl ErrorResponse {
     }
 }
 
-impl<U> Router<U>
+impl<U, T> Router<U, T>
 where
     U: UserService,
+    T: TokenCoder,
 {
-    pub fn new(config: Config, state: AppState<U>) -> Self {
+    pub fn new(config: Config, state: AppState<U, T>) -> Self {
         Router {
             address: config.address,
             frontend_path: config.frontend_path,
@@ -77,7 +84,14 @@ where
                         "/users",
                         axum::Router::new()
                             .route("/register", post(user::register))
-                            .route("/login", post(user::login)),
+                            .route("/login", post(user::login))
+                            .route(
+                                "/refresh",
+                                post(user::refresh_session).layer(from_fn_with_state(
+                                    state.clone(),
+                                    middleware::jwt_middleware,
+                                )),
+                            ),
                     ),
                 )
                 .fallback_service(ServeDir::new(&self.frontend_path).not_found_service(

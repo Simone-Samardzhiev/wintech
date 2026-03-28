@@ -30,7 +30,7 @@ async fn main() {
         user_repository,
         token_repository,
         password_hashers::ArgonPasswordHasher,
-        token_hashers::JWTTokenHasher::new(
+        token_hashers::JWTTokenCoder::new(
             config.jwt_secret.clone(),
             config.jwt_issuer.clone(),
             config.jwt_audience.clone(),
@@ -45,7 +45,15 @@ async fn main() {
         "Starting server"
     );
 
-    let services = http::AppState::new(user_service, config.jwt_refresh_expiry);
+    let services = http::AppState::new(
+        user_service,
+        token_hashers::JWTTokenCoder::new(
+            config.jwt_secret.clone(),
+            config.jwt_issuer.clone(),
+            config.jwt_audience.clone(),
+        ),
+        config.jwt_refresh_expiry,
+    );
     let router = http::Router::new(config, services);
 
     router.listen().await.unwrap();

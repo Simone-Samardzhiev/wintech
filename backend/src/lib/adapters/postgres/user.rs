@@ -1,6 +1,7 @@
 use crate::domain::user::models::{Token, User, UserError};
 use anyhow::{Context, anyhow};
 use sqlx::{Error, PgPool, Row, query};
+use uuid::Uuid;
 
 /// Implementation of [`crate::domain::user::ports::UserRepository`]
 /// using postgres.
@@ -95,5 +96,20 @@ impl crate::domain::user::ports::TokenRepository for TokenRepository {
             .context("Failed to save token")?;
 
         Ok(())
+    }
+
+    async fn delete(&self, id: Uuid) -> Result<(), UserError> {
+        let result = query("DELETE FROM tokens WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .context("Failed to delete token")?;
+
+        let count = result.rows_affected();
+        if count > 0 {
+            Ok(())
+        } else {
+            Err(UserError::TokenNotFoundById(id))
+        }
     }
 }

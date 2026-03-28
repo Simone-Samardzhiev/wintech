@@ -1,11 +1,13 @@
 use super::AppState;
 use super::ErrorResponse;
-use crate::domain::user::models::UserError;
-use crate::domain::user::service::UserService;
-use axum::Json;
-use axum::extract::State;
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
+use crate::domain::user::models::Token;
+use crate::domain::user::{models::UserError, ports::TokenCoder, service::UserService};
+use axum::{
+    Json,
+    extract::{Extension, State},
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -38,6 +40,19 @@ impl IntoResponse for UserError {
                 "Wrong credentials.".to_string(),
                 None,
             ),
+            UserError::InvalidToken => {
+                (StatusCode::UNAUTHORIZED, "Invalid token.".to_string(), None)
+            }
+            UserError::InvalidTokenType => (
+                StatusCode::UNAUTHORIZED,
+                "Invalid token type.".to_string(),
+                None,
+            ),
+            UserError::TokenNotFoundById(id) => (
+                StatusCode::NOT_FOUND,
+                format!("Token with id: {} not found", id),
+                None,
+            ),
             UserError::Unknown(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error.".to_string(),
@@ -62,13 +77,13 @@ pub struct RegisterRequest {
 }
 
 /// Function handling user registration.
-#[tracing::instrument(name = "register_handler", skip(state, payload), fields(username=%payload.username, email=%payload.email))]
-pub async fn register<U>(
-    State(state): State<Arc<AppState<U>>>,
+pub async fn register<U, T>(
+    State(state): State<Arc<AppState<U, T>>>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<StatusCode, UserError>
 where
     U: UserService,
+    T: TokenCoder,
 {
     let request = crate::domain::user::models::RegisterRequest::parse(
         payload.username.clone(),
@@ -108,16 +123,16 @@ pub struct LoginRequest {
     password: String,
 }
 
-/// Response from successful login.
+/// Response from successful login or refreshing a session.
 #[derive(Debug, Serialize)]
-pub struct LoginResponse {
+pub struct TokensResponse {
     #[serde(rename = "refreshToken")]
     refresh_token: String,
     #[serde(rename = "accessToken")]
     access_token: String,
 }
 
-impl From<crate::domain::user::models::Tokens> for LoginResponse {
+impl From<crate::domain::user::models::Tokens> for TokensResponse {
     fn from(tokens: crate::domain::user::models::Tokens) -> Self {
         Self {
             refresh_token: tokens.refresh_token,
@@ -127,13 +142,14 @@ impl From<crate::domain::user::models::Tokens> for LoginResponse {
 }
 
 /// Function handling user login.
-pub async fn login<U>(
-    State(state): State<Arc<AppState<U>>>,
+pub async fn login<U, T>(
+    State(state): State<Arc<AppState<U, T>>>,
     jar: CookieJar,
     Json(payload): Json<LoginRequest>,
-) -> Result<(StatusCode, CookieJar, Json<LoginResponse>), UserError>
+) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
 where
     U: UserService,
+    T: TokenCoder,
 {
     let tokens = state
         .user_service
@@ -165,6 +181,45 @@ where
     Ok((
         StatusCode::CREATED,
         update_jar,
-        Json(LoginResponse::from(tokens)),
+        Json(TokensResponse::from(tokens)),
+    ))
+}
+
+/// Function handling user login.
+pub async fn refresh_session<U, T>(
+    State(state): State<Arc<AppState<U, T>>>,
+    Extension(token): Extension<Token>,
+    jar: CookieJar,
+) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
+where
+    U: UserService,
+    T: TokenCoder,
+{
+    let tokens = state
+        .user_service
+        .refresh_session(&token)
+        .await
+        .map_err(|e| {
+            if let UserError::Unknown(ref error) = e {
+                tracing::error!(
+                    error = ?error,
+                )
+            }
+            e
+        })?;
+
+    let cookie = Cookie::build(("refresh_token", tokens.refresh_token.clone()))
+        .path("/")
+        .http_only(true)
+        .same_site(SameSite::Strict)
+        .expires(OffsetDateTime::now_utc() + state.cookie_expiry)
+        .build();
+
+    let update_jar = jar.add(cookie);
+
+    Ok((
+        StatusCode::CREATED,
+        update_jar,
+        Json(TokensResponse::from(tokens)),
     ))
 }

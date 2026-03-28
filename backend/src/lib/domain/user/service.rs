@@ -1,5 +1,5 @@
 use super::models::{LoginRequest, RegisterRequest, Token, TokenKind, Tokens, User, UserError};
-use super::ports::{PasswordHasher, TokenHasher, TokenRepository, UserRepository};
+use super::ports::{PasswordHasher, TokenCoder, TokenRepository, UserRepository};
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
@@ -29,6 +29,11 @@ pub trait UserService: Send + Sync + 'static {
         &self,
         request: LoginRequest,
     ) -> impl Future<Output = Result<Tokens, UserError>> + Send;
+
+    fn refresh_session(
+        &self,
+        token: &Token,
+    ) -> impl Future<Output = Result<Tokens, UserError>> + Send;
 }
 
 /// Default implementation of [`UserService`].
@@ -37,7 +42,7 @@ where
     UR: UserRepository,
     TR: TokenRepository,
     P: PasswordHasher,
-    T: TokenHasher,
+    T: TokenCoder,
 {
     user_repository: UR,
     token_repository: TR,
@@ -52,7 +57,7 @@ where
     UR: UserRepository,
     TR: TokenRepository,
     P: PasswordHasher,
-    T: TokenHasher,
+    T: TokenCoder,
 {
     pub fn new(
         user_repository: UR,
@@ -78,7 +83,7 @@ where
     UR: UserRepository,
     TR: TokenRepository,
     P: PasswordHasher,
-    T: TokenHasher,
+    T: TokenCoder,
 {
     async fn register(&self, request: RegisterRequest) -> Result<(), UserError> {
         let hash = self.password_hasher.hash(request.password.as_ref())?;
@@ -121,13 +126,47 @@ where
         self.token_repository.save(&refresh_token).await?;
 
         Ok(Tokens::new(
-            self.token_hasher.hash(Token::new(
+            self.token_hasher.encode(&Token::new(
                 Uuid::new_v4(),
                 TokenKind::Access,
                 OffsetDateTime::now_utc() + self.access_token_expiry,
                 user.id,
             ))?,
-            self.token_hasher.hash(refresh_token)?,
+            self.token_hasher.encode(&refresh_token)?,
+        ))
+    }
+
+    async fn refresh_session(&self, token: &Token) -> Result<Tokens, UserError> {
+        match token.kind {
+            TokenKind::Access => return Err(UserError::InvalidTokenType),
+            TokenKind::Refresh => {}
+        }
+
+        self.token_repository
+            .delete(token.id)
+            .await
+            .map_err(|e| match e {
+                UserError::TokenNotFoundById(_) => UserError::InvalidToken,
+                _ => e,
+            })?;
+
+        let refresh_token = Token::new(
+            Uuid::new_v4(),
+            TokenKind::Refresh,
+            OffsetDateTime::now_utc() + self.refresh_token_expiry,
+            token.user_id,
+        );
+
+        self.token_repository.save(&refresh_token).await?;
+
+        Ok(Tokens::new(
+            self.token_hasher.encode(&Token::new(
+                Uuid::new_v4(),
+                TokenKind::Access,
+                OffsetDateTime::now_utc() + self.access_token_expiry,
+                token.user_id,
+            ))?,
+            self.token_hasher.encode(&refresh_token)?,
         ))
     }
 }
