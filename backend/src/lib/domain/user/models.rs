@@ -22,13 +22,13 @@ pub enum UserValidationError {
     },
 
     #[error(
-        "Password missing requirements (Upper: {upper}, Lower: {lower}, Special: {special}, Number: {number})"
+        "Password missing requirements (Upper: {upper}, Lower: {lower}, Special: {special}, Digit: {digit})"
     )]
     MissingCharacter {
         upper: bool,
         lower: bool,
         special: bool,
-        number: bool,
+        digit: bool,
     },
 }
 
@@ -150,31 +150,28 @@ impl UserPassword {
         let mut has_upper = false;
         let mut has_lower = false;
         let mut has_special = false;
-        let mut has_number = false;
+        let mut has_digit = false;
         for c in password.chars() {
             if c.is_uppercase() {
                 has_upper = true;
             }
-
             if c.is_lowercase() {
                 has_lower = true;
             }
-
             if c.is_ascii_punctuation() || c.is_ascii_hexdigit() {
                 has_special = true;
             }
-
             if c.is_ascii_digit() {
-                has_number = true;
+                has_digit = true;
             }
         }
 
-        if !has_upper || !has_lower || !has_special || !has_number {
+        if !has_upper || !has_lower || !has_special || !has_digit {
             return Err(UserValidationError::MissingCharacter {
                 upper: has_upper,
                 lower: has_lower,
                 special: has_special,
-                number: has_number,
+                digit: has_digit,
             });
         }
 
