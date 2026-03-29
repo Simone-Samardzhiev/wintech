@@ -314,7 +314,7 @@ impl LoginRequest {
     }
 }
 
-/// Struct holding refresh and access token from successful login.
+/// Struct holding refresh and access token.
 #[derive(Debug)]
 pub struct Tokens {
     pub access_token: String,

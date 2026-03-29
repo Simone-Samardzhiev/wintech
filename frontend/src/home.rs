@@ -47,11 +47,9 @@ pub fn Home() -> impl IntoView {
             description="Never worry about an open window again. \
             If you're out and the weather turns, \
             the system detects rain instantly and closes itself, \
-            keeping your home dry and tidy"
+            keeping your home dry and tidy."
             color="#004CC7"
             image_url="/assets/rain_shield.png"/>
         </div>
-
-
     }
 }

@@ -1,8 +1,12 @@
+mod account;
 mod home;
+mod widgets;
 
 use leptos::prelude::*;
-use leptos_router::components::{A, Route, Router, Routes};
-use leptos_router::path;
+use leptos_router::{
+    components::{A, Route, Router, Routes},
+    path,
+};
 
 /// Custom view displayed when a page is not found.
 #[component]
@@ -15,18 +19,28 @@ pub fn NotFound() -> impl IntoView {
     }
 }
 
+#[derive(Copy, Clone)]
+struct AuthContext {
+    is_logged_in: RwSignal<bool>,
+}
+
 /// The app entry point.
 #[component]
 fn App() -> impl IntoView {
+    provide_context(AuthContext {
+        is_logged_in: RwSignal::new(false),
+    });
+
     view! {
         <Router>
             <nav>
                 <A href="/">"Home"</A>
-                <A href="/order">"Order"</A>
+                <A href="/account">"Account"</A>
             </nav>
             <main>
                 <Routes fallback=|| view! { <NotFound/> }>
                     <Route path=path!("/") view=home::Home/>
+                    <Route path=path!("/account") view=account::Account/>
                 </Routes>
             </main>
         </Router>
@@ -34,5 +48,6 @@ fn App() -> impl IntoView {
 }
 
 fn main() {
+    console_error_panic_hook::set_once();
     mount_to_body(App)
 }
