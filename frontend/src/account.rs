@@ -1,9 +1,12 @@
 mod login;
+mod register;
 
 use crate::AuthContext;
 use leptos::prelude::*;
+use login::Login;
+use register::Register;
 
-/// Enum used to swap between [`Register`] component and [`login::Login`] component.
+/// Enum used to swap between [`Register`] component and [`Login`] component.
 #[derive(Clone, Copy, PartialEq, Default)]
 enum AuthMode {
     #[default]
@@ -11,7 +14,7 @@ enum AuthMode {
     Register,
 }
 
-/// Component displaying either [`Register`] or [`login::Login`] component.
+/// Component displaying either [`Register`] or [`Login`] component.
 #[component]
 fn Auth() -> impl IntoView {
     let auth_mode = RwSignal::new(AuthMode::Login);
@@ -22,31 +25,8 @@ fn Auth() -> impl IntoView {
                 when=move || auth_mode.get() == AuthMode::Login
                 fallback=move || view! { <Register set_mode=auth_mode.write_only() /> }
             >
-                <login::Login set_mode=auth_mode.write_only() />
+                <Login set_mode=auth_mode.write_only() />
             </Show>
-        </div>
-    }
-}
-
-/// Component used to register.
-#[component]
-fn Register(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
-    let username = RwSignal::new(String::new());
-    let email = RwSignal::new(String::new());
-    let password = RwSignal::new(String::new());
-
-    view! {
-        <div class="auth-card">
-            <h2>"Register"</h2>
-            <form class="input-container">
-                <input type="text" placeholder="Username" name="username" bind:value=username/>
-                <input type="text" placeholder="Email" name="email" bind:value=email/>
-                <input type="password" placeholder="Password" name="password" bind:value=password/>
-                <button class="link-btn" on:click=move |_| set_mode.set(AuthMode::Login)>
-                    "Already have an account? Login"
-                </button>
-                <button type="submit" class="auth-btn">"Create Account"</button>
-            </form>
         </div>
     }
 }

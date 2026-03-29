@@ -9,3 +9,4 @@ leptos_router = { version = "0.8.13" }
 gloo-net = "0.7.0"
 serde = { version = "1.0.228", features = ["derive"] }
 console_error_panic_hook = "0.1.7"
+email_address = "0.2.9"

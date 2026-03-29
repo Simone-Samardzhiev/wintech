@@ -1,9 +1,9 @@
 use super::AuthMode;
-use crate::AuthContext;
-use crate::widgets::ProgressBar;
+use crate::{AuthContext, widgets::ProgressBar};
 use gloo_net::http::Request;
-use leptos::prelude::*;
-use leptos::{context::use_context, ev::SubmitEvent, leptos_dom::log, task::spawn_local};
+use leptos::{
+    context::use_context, ev::SubmitEvent, leptos_dom::log, prelude::*, task::spawn_local,
+};
 use serde::Serialize;
 
 /// Struct representing the JSON request for login.
@@ -19,27 +19,24 @@ impl LoginRequest {
     }
 }
 
-/// Component used to login.
+/// Component used to log in.
 #[component]
 pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
     let email = RwSignal::new(String::new());
     let password = RwSignal::new(String::new());
+
     let is_loading = RwSignal::new(false);
-
-    // 1. Create a signal to hold our error message
     let error_msg = RwSignal::new(None::<String>);
-
     let context = use_context::<AuthContext>().expect("Missing auth context");
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         is_loading.set(true);
 
-        // 2. Clear any previous errors when starting a new request
         error_msg.set(None);
 
         spawn_local(async move {
-            let response = Request::post(&"/api/v1/users/login")
+            let response = Request::post("/api/v1/users/login")
                 .json(&LoginRequest::new(email.get(), password.get()))
                 .expect("Failed to serialize login request")
                 .send()
@@ -78,6 +75,7 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
                 <input type="password" placeholder="Password" name="password" bind:value=password/>
 
                 {move || error_msg.get().map(|msg| view! { <span class="error-text">{msg}</span> })}
+
                 <button type="button" class="link-btn" on:click=move |_| set_mode.set(AuthMode::Register)>
                     "Don't have an account? Register"
                 </button>

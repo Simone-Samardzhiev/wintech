@@ -776,6 +776,7 @@ name = "frontend"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "email_address",
  "gloo-net 0.7.0",
  "leptos",
  "leptos_router",
