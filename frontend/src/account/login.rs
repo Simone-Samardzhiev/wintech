@@ -74,7 +74,7 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
         <div class="auth-card">
             <h2>"Login"</h2>
             <form on:submit=on_submit class="input-container">
-                <input type="text" placeholder="Email" name="email" bind:value=email/>
+                <input type="email" placeholder="Email" name="email" bind:value=email/>
                 <input type="password" placeholder="Password" name="password" bind:value=password/>
 
                 {move || error_msg.get().map(|msg| view! { <span class="error-text">{msg}</span> })}
