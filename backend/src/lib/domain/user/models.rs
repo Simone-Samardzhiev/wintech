@@ -103,7 +103,9 @@ pub struct UserEmail {
 }
 
 impl UserEmail {
-    pub fn parse(email: String) -> Result<Self, UserValidationError> {
+    pub fn parse(mut email: String) -> Result<Self, UserValidationError> {
+        email = email.trim().to_string();
+
         if email_address::EmailAddress::is_valid(&email) {
             return Ok(Self { email });
         }
