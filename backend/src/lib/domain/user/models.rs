@@ -158,7 +158,7 @@ impl UserPassword {
             if c.is_lowercase() {
                 has_lower = true;
             }
-            if c.is_ascii_punctuation() || c.is_ascii_hexdigit() {
+            if c.is_ascii_punctuation() {
                 has_special = true;
             }
             if c.is_ascii_digit() {
