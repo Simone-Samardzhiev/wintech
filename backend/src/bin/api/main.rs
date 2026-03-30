@@ -1,9 +1,9 @@
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use backend::{
     adapters::{http, password_hashers, postgres, token_hashers},
     config::Config,
     domain,
 };
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
@@ -23,6 +23,7 @@ async fn main() {
 
     let pool = postgres::connect(&config.database_url).await.unwrap();
 
+    // User
     let user_repository = postgres::user::UserRepository::new(pool.clone());
     let token_repository = postgres::user::TokenRepository::new(pool.clone());
     let user_service = domain::user::service::DefaultUserService::new(
@@ -38,6 +39,10 @@ async fn main() {
         config.jwt_access_expiry,
     );
 
+    // Window
+    let window_repository = postgres::window::WindowRepository::new(pool.clone());
+    let window_service = domain::window::service::DefaultWindowService::new(window_repository);
+
     tracing::info!(
         address = %config.address,
         fronendPath = %config.frontend_path,
@@ -46,6 +51,7 @@ async fn main() {
 
     let services = http::AppState::new(
         user_service,
+        window_service,
         token_hashers::JWTTokenCoder::new(
             config.jwt_secret.clone(),
             config.jwt_issuer.clone(),

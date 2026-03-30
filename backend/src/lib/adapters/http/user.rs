@@ -4,6 +4,7 @@ use crate::domain::user::{
     ports::TokenCoder,
     service::UserService,
 };
+use crate::domain::window::service::WindowService;
 use axum::{
     Json,
     extract::{Extension, State},
@@ -24,6 +25,15 @@ impl IntoResponse for UserError {
                 (
                     StatusCode::UNPROCESSABLE_ENTITY,
                     "Invalid registration request.".to_string(),
+                    Some(details),
+                )
+            }
+            UserError::InvalidUser(errors) => {
+                let details: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
+
+                (
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "Invalid user.".to_string(),
                     Some(details),
                 )
             }
@@ -79,12 +89,13 @@ pub struct RegisterRequest {
 }
 
 /// Function handling user registration.
-pub async fn register<U, T>(
-    State(state): State<Arc<AppState<U, T>>>,
+pub async fn register<U, W, T>(
+    State(state): State<Arc<AppState<U, W, T>>>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<StatusCode, UserError>
 where
     U: UserService,
+    W: WindowService,
     T: TokenCoder,
 {
     let request = crate::domain::user::models::RegisterRequest::parse(
@@ -94,11 +105,11 @@ where
     )
     .map_err(|e| {
         if let UserError::Unknown(ref error) = e {
-            tracing::error!(
-                error = ?error,
-                username = %payload.username,
-                email = %payload.email,
-                "Unknow error during validating register request"
+            tracing::error ! (
+            error = ? error,
+            username = % payload.username,
+            email = %payload.email,
+            "Unknow error during validating register request"
             );
         }
         e
@@ -106,11 +117,11 @@ where
 
     state.user_service.register(request).await.map_err(|e| {
         if let UserError::Unknown(ref error) = e {
-            tracing::error!(
-                error = ?error,
-                username = %payload.username,
-                email = %payload.email,
-                "Unknow error during registration of a new user"
+            tracing::error ! (
+            error = ? error,
+            username = % payload.username,
+            email = %payload.email,
+            "Unknow error during registration of a new user"
             );
         }
         e
@@ -144,13 +155,14 @@ impl From<crate::domain::user::models::Tokens> for TokensResponse {
 }
 
 /// Function handling user login.
-pub async fn login<U, T>(
-    State(state): State<Arc<AppState<U, T>>>,
+pub async fn login<U, W, T>(
+    State(state): State<Arc<AppState<U, W, T>>>,
     jar: CookieJar,
     Json(payload): Json<LoginRequest>,
 ) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
 where
     U: UserService,
+    W: WindowService,
     T: TokenCoder,
 {
     let tokens = state
@@ -188,13 +200,14 @@ where
 }
 
 /// Function handling user login.
-pub async fn refresh_session<U, T>(
-    State(state): State<Arc<AppState<U, T>>>,
+pub async fn refresh_session<U, W, T>(
+    State(state): State<Arc<AppState<U, W, T>>>,
     Extension(token): Extension<Token>,
     jar: CookieJar,
 ) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
 where
     U: UserService,
+    W: WindowService,
     T: TokenCoder,
 {
     let tokens = state

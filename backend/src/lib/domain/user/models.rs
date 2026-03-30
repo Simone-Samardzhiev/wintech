@@ -1,3 +1,4 @@
+use clap::Parser;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -37,6 +38,9 @@ pub enum UserValidationError {
 pub enum UserError {
     #[error("Invalid register request")]
     InvalidRegisterRequest(Vec<UserValidationError>),
+
+    #[error("Invalid user")]
+    InvalidUser(Vec<UserValidationError>),
 
     #[error("Email address ({0}) already exists")]
     EmailAlreadyExists(String),
@@ -215,7 +219,7 @@ impl User {
         let name = Username::parse(name).map_err(|e| errs.push(e)).ok();
         let email = UserEmail::parse(email).map_err(|e| errs.push(e)).ok();
         if !errs.is_empty() {
-            return Err(UserError::InvalidRegisterRequest(errs));
+            return Err(UserError::InvalidUser(errs));
         }
         Ok(Self {
             id,
@@ -254,7 +258,7 @@ impl RegisterRequest {
 }
 
 /// Enum representing token types.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenKind {
     Access,
     Refresh,

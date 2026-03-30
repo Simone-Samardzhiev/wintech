@@ -1,3 +1,4 @@
+use crate::domain::window::service::WindowService;
 use crate::{
     adapters::http::AppState,
     domain::user::{models::UserError, ports::TokenCoder, service::UserService},
@@ -18,13 +19,14 @@ fn get_token_header(req: &Request<Body>) -> Option<String> {
 /// Function that decodes [`crate::domain::user::models::Token`] from either
 /// the [`axum::http::header::AUTHORIZATION`] or the cookie
 /// and inserts it as extension for the next handler.
-pub async fn jwt_middleware<U, T>(
-    State(state): State<Arc<AppState<U, T>>>,
+pub async fn jwt_middleware<U, W, T>(
+    State(state): State<Arc<AppState<U, W, T>>>,
     mut req: Request<Body>,
     next: Next,
 ) -> Result<Response<Body>, UserError>
 where
     U: UserService,
+    W: WindowService,
     T: TokenCoder,
 {
     let token_header = get_token_header(&req);
