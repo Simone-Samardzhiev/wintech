@@ -1,11 +1,11 @@
+mod dashboard;
 mod login;
 mod register;
-mod dashboard;
 
 use crate::auth;
-use leptos::prelude::*;
-use login::Login;
-use register::Register;
+use leptos::{either::Either, html::div, prelude::*};
+use login::{Login, LoginProps};
+use register::{Register, RegisterProps};
 
 /// Enum used to swap between [`Register`] component and [`Login`] component.
 #[derive(Clone, Copy, PartialEq, Default)]
@@ -19,20 +19,17 @@ enum AuthMode {
 #[component]
 fn Auth() -> impl IntoView {
     let auth_mode = RwSignal::new(AuthMode::Login);
-
-    view! {
-        <div class="auth-page">
-            <Show
-                when=move || auth_mode.get() == AuthMode::Login
-                fallback=move || view! { <Register set_mode=auth_mode.write_only() /> }
-            >
-                <Login set_mode=auth_mode.write_only() />
-            </Show>
-        </div>
-    }
+    div()
+        .class("auth-page")
+        .child(move || match auth_mode.get() {
+            AuthMode::Login => Either::Left(Login(LoginProps {
+                set_mode: auth_mode.write_only(),
+            })),
+            AuthMode::Register => Either::Right(Register(RegisterProps {
+                set_mode: auth_mode.write_only(),
+            })),
+        })
 }
-
-
 
 /// Component that displays [`Auth`] if the user is not logged in
 /// and [`Dashboard`] otherwise.

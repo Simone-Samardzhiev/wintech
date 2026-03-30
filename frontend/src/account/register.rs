@@ -1,7 +1,16 @@
 use super::AuthMode;
 use crate::widgets::ProgressBar;
 use gloo_net::http::Request;
-use leptos::{ev::SubmitEvent, leptos_dom::log, prelude::*, task::spawn_local};
+use leptos::html::span;
+use leptos::{
+    either::Either,
+    ev,
+    ev::SubmitEvent,
+    html::{button, div, form, h2, input, p},
+    leptos_dom::log,
+    prelude::*,
+    task::spawn_local,
+};
 use serde::Serialize;
 
 /// Struct representing the JSON request for registering.
@@ -176,38 +185,74 @@ pub fn Register(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
         })
     };
 
-    view! {
-        <div class="auth-card">
-            <h2>"Register"</h2>
-            <Show
-                when=move || !is_success.get()
-                fallback=move || view! {
-                    <div class="success-container">
-                        <p class="success-text">"Account created successfully!"</p>
-                        <button class="auth-btn" on:click=move |_| set_mode.set(AuthMode::Login)>
-                            "Go to Login"
-                        </button>
-                    </div>
-                }
-            >
-                <form on:submit=on_submit class="input-container">
-                    <input type="text" placeholder="Username" name="username" bind:value=username/>
-                    <input type="email" placeholder="Email" name="email" bind:value=email/>
-                    <input type="password" placeholder="Password" name="password" bind:value=password/>
-
-                    {move || error_msg.get().map(|msg| view! { <span class="error-text">{msg}</span> })}
-
-                    <button type="button" class="link-btn" on:click=move |_| set_mode.set(AuthMode::Login)>
-                        "Already have an account? Login"
-                    </button>
-
-                    <button type="submit" class="auth-btn" disabled=is_loading>
-                        <Show when=move || !is_loading.get() fallback=|| view! {<ProgressBar/>}>
-                            "Create Account"
-                        </Show>
-                    </button>
-                </form>
-            </Show>
-        </div>
-    }
+    div().class("auth-card").child((
+        h2().child("Register"),
+        form().on(ev::submit, on_submit).child(move || {
+            if is_success.get() {
+                Either::Left(
+                    div().class("success-container").child((
+                        p().class("success-text")
+                            .child("Account created successfully!"),
+                        button()
+                            .on(ev::click, move |_| set_mode.set(AuthMode::Login))
+                            .class("success")
+                            .child("Go to Login"),
+                    )),
+                )
+            } else {
+                Either::Right(
+                    form()
+                        .on(ev::submit, on_submit)
+                        .class("input-container")
+                        .child((
+                            input()
+                                .attr("type", "text")
+                                .attr("placeholder", "Username")
+                                .attr("name", "username")
+                                .prop("value", move || username.get())
+                                .on(ev::input, move |ev| {
+                                    username.set(event_target_value(&ev));
+                                }),
+                            input()
+                                .attr("type", "email")
+                                .attr("placeholder", "Email")
+                                .attr("name", "email")
+                                .prop("value", move || email.get())
+                                .on(ev::input, move |ev| {
+                                    email.set(event_target_value(&ev));
+                                }),
+                            input()
+                                .attr("type", "password")
+                                .attr("placeholder", "Password")
+                                .attr("name", "password")
+                                .prop("value", move || password.get())
+                                .on(ev::input, move |ev| {
+                                    password.set(event_target_value(&ev));
+                                }),
+                            move || {
+                                error_msg
+                                    .get()
+                                    .map(|msg| span().class("error-text").child(msg))
+                            },
+                            button()
+                                .attr("type", "button")
+                                .class("link-btn")
+                                .on(ev::click, move |_| set_mode.set(AuthMode::Login))
+                                .child("Don't have an account? Register"),
+                            button()
+                                .attr("type", "submit")
+                                .class("auth-btn")
+                                .attr("disabled", move || is_loading.get())
+                                .child(move || {
+                                    if is_loading.get() {
+                                        Either::Left(ProgressBar())
+                                    } else {
+                                        Either::Right("Create Account")
+                                    }
+                                }),
+                        )),
+                )
+            }
+        }),
+    ))
 }

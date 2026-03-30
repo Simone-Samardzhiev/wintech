@@ -6,7 +6,14 @@ use crate::{
 use codee::string::FromToStringCodec;
 use gloo_net::http::Request;
 use leptos::{
-    context::use_context, ev::SubmitEvent, leptos_dom::log, prelude::*, task::spawn_local,
+    context::use_context,
+    either::Either,
+    ev,
+    ev::SubmitEvent,
+    html::{button, div, form, h2, input, span},
+    leptos_dom::log,
+    prelude::*,
+    task::spawn_local,
 };
 use leptos_use::storage::use_local_storage;
 use serde::Serialize;
@@ -81,31 +88,49 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
         })
     };
 
-    view! {
-        <div class="auth-card">
-            <h2>"Login"</h2>
-            <form on:submit=on_submit class="input-container">
-                <input type="email" placeholder="Email" name="email" bind:value=email/>
-                <input type="password" placeholder="Password" name="password" bind:value=password/>
-
-                {move || error_msg.get().map(|msg| view! { <span class="error-text">{msg}</span> })}
-
-                <button type="button" class="link-btn" on:click=move |_| set_mode.set(AuthMode::Register)>
-                    "Don't have an account? Register"
-                </button>
-                <button
-                    type="submit"
-                    class="auth-btn"
-                    disabled=is_loading
-                >
-                    <Show
-                        when=move || !is_loading.get()
-                        fallback=move || view! { <ProgressBar /> }
-                    >
-                        "Sign In"
-                    </Show>
-                </button>
-            </form>
-        </div>
-    }
+    div().class("auth-card").child((
+        h2().child("Login"),
+        form()
+            .on(ev::submit, on_submit)
+            .class("input-container")
+            .child((
+                input()
+                    .attr("type", "email")
+                    .attr("placeholder", "Email")
+                    .attr("name", "email")
+                    .prop("value", move || email.get())
+                    .on(ev::input, move |ev| {
+                        email.set(event_target_value(&ev));
+                    }),
+                input()
+                    .attr("type", "password")
+                    .attr("placeholder", "Password")
+                    .attr("name", "password")
+                    .prop("value", move || password.get())
+                    .on(ev::input, move |ev| {
+                        email.set(event_target_value(&ev));
+                    }),
+                move || {
+                    error_msg
+                        .get()
+                        .map(|msg| span().class("error-text").child(msg))
+                },
+                button()
+                    .attr("type", "button")
+                    .class("link-btn")
+                    .on(ev::click, move |_| set_mode.set(AuthMode::Register))
+                    .child("Don't have an account? Register"),
+                button()
+                    .attr("type", "submit")
+                    .class("auth-btn")
+                    .attr("disabled", move || is_loading.get())
+                    .child(move || {
+                        if is_loading.get() {
+                            Either::Left(ProgressBar())
+                        } else {
+                            Either::Right("Sign in")
+                        }
+                    }),
+            )),
+    ))
 }
