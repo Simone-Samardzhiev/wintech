@@ -3,8 +3,10 @@ mod auth;
 mod home;
 mod widgets;
 
+use auth::{Error as AuthError, State as AuthState};
 use codee::string::FromToStringCodec;
-use leptos::{prelude::*, task::spawn_local, logging::log};
+use leptos::logging::log;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_router::{
     components::{A, Route, Router, Routes},
     path,
@@ -29,9 +31,21 @@ fn App() -> impl IntoView {
         use_local_storage::<bool, FromToStringCodec>("previously_logged");
 
     if get_previously_logged.get() {
-        log!("Here1");
         spawn_local(async move {
-            let _ = context.refresh_session().await;
+            match auth::refresh_session().await {
+                Ok(response) => context.state.set(AuthState::Logged(response.access_token)),
+                Err(err) => match err {
+                    AuthError::SessionExpired => {
+                        context.state.set(AuthState::Error("".to_string()))
+                    }
+                    AuthError::InvalidResponse => {
+                        log!("Unexpected server response");
+                    }
+                    AuthError::Network(_) => {
+                        log!("Network error");
+                    }
+                },
+            }
         });
     }
 

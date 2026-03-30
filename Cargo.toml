@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.dependencies]
 serde = {version = "1.0.228", features = ["derive"]}
-uuid = { version = "1.23.0", features = ["serde", "v4"] }
+uuid = { version = "1.23.0", features = ["serde", "v4", "js"] }
 time = { version = "0.3.47", features = ["serde"] }
 thiserror = { version = "2.0.18" }
 

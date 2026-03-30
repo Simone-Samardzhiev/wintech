@@ -978,6 +978,8 @@ dependencies = [
  "leptos_router",
  "serde",
  "thiserror 2.0.18",
+ "time",
+ "uuid",
 ]
 
 [[package]]

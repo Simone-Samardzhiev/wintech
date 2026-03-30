@@ -1,9 +1,6 @@
 use crate::auth::Error::SessionExpired;
 use crate::auth::State::Pending;
-use gloo_net::{
-    Error as GlooError,
-    http::{Request, Response as HttpResponse},
-};
+use gloo_net::{Error as GlooError, http::Request};
 use leptos::prelude::*;
 use leptos_router::components::A;
 use serde::Deserialize;
@@ -32,7 +29,7 @@ pub struct Response {
 #[derive(Debug, Clone)]
 pub enum State {
     Pending,
-    Expired,
+    Error(String),
     Logged(String),
 }
 
@@ -48,67 +45,32 @@ impl Context {
         }
     }
 
-    pub fn is_expired(&self) -> bool {
-        match *self.state.read() {
-            State::Expired => true,
+    pub fn is_logged_in(&self) -> bool {
+        match self.state.get() {
+            State::Logged(_) => true,
             _ => false,
         }
     }
-
-    pub async fn refresh_session(&self) -> Result<(), Error> {
-        let response = Request::post("/api/v1/users/refresh").send().await?;
-
-        match response.status() {
-            201 => {
-                let body = response
-                    .json::<Response>()
-                    .await
-                    .map_err(|_| Error::InvalidResponse)?;
-
-                self.state.set(State::Logged(body.access_token));
-                Ok(())
-            }
-            401 => {
-                self.state.set(State::Expired);
-                Err(Error::SessionExpired)
-            }
-            _ => Err(Error::InvalidResponse),
+    pub fn is_error(&self) -> bool {
+        match self.state.get() {
+            State::Error(_) => true,
+            _ => false,
         }
     }
+}
+pub async fn refresh_session() -> Result<Response, Error> {
+    let response = Request::post("/api/v1/users/refresh").send().await?;
 
-    pub async fn authenticate<F>(&self, make_request: F) -> Result<HttpResponse, Error>
-    where
-        F: Fn() -> Request,
-    {
-        let token = match self.state.get() {
-            State::Logged(token) => token,
-            _ => panic!("Attempt to authenticate request of non logged user?"),
-        };
-        let request = make_request();
-        request
-            .headers()
-            .set("Authorization", &format!("Bearer {}", token));
-
-        let response = request.send().await?;
-
-        if response.status() == 401 {
-            self.refresh_session().await?;
+    match response.status() {
+        201 => {
+            let body = response
+                .json::<Response>()
+                .await
+                .map_err(|_| Error::InvalidResponse)?;
+            Ok(body)
         }
-
-        let new_token = match self.state.get() {
-            State::Logged(token) => token,
-            _ => Err(SessionExpired)?,
-        };
-
-        let request = make_request();
-        request
-            .headers()
-            .set("Authorization", &format!("Bearer {}", new_token));
-
-        match request.send().await {
-            Ok(resp) => Ok(resp),
-            Err(err) => Err(Error::Network(err)),
-        }
+        401 => Err(SessionExpired),
+        _ => Err(Error::InvalidResponse),
     }
 }
 
@@ -124,7 +86,7 @@ pub fn AuthAlert() -> impl IntoView {
     let show_alert = RwSignal::new(false);
 
     Effect::new(move |_| {
-        if context.is_expired() {
+        if context.is_error() {
             show_alert.set(true);
         }
     });

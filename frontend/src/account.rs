@@ -1,5 +1,6 @@
 mod login;
 mod register;
+mod dashboard;
 
 use crate::auth;
 use leptos::prelude::*;
@@ -31,13 +32,7 @@ fn Auth() -> impl IntoView {
     }
 }
 
-/// Component displaying orders and info about already installed smart windows.
-#[component]
-fn Dashboard() -> impl IntoView {
-    view! {
-        <h1>"Dashboard"</h1>
-    }
-}
+
 
 /// Component that displays [`Auth`] if the user is not logged in
 /// and [`Dashboard`] otherwise.
@@ -46,8 +41,8 @@ pub fn Account() -> impl IntoView {
     let context = use_context::<auth::Context>().expect("Missing auth context");
 
     view! {
-        <Show when=move || context.is_expired() fallback=move || view! {<Auth/>}>
-            <Dashboard/>
+        <Show when=move || context.is_logged_in() fallback=move || view! {<Auth/>}>
+            <dashboard::Dashboard/>
         </Show>
     }
 }
