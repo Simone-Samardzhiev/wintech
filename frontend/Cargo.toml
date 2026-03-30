@@ -6,7 +6,11 @@ edition = "2024"
 [dependencies]
 leptos = { version = "0.8.17", features = ["csr"] }
 leptos_router = { version = "0.8.13" }
+leptos-use = { version = "0.18.3" }
+
 gloo-net = "0.7.0"
-serde = { version = "1.0.228", features = ["derive"] }
+serde = { workspace = true }
+thiserror = { workspace = true }
 console_error_panic_hook = "0.1.7"
 email_address = "0.2.9"
+codee = { version = "0.3.5", features = ["json_serde"] }

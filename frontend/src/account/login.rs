@@ -1,9 +1,14 @@
 use super::AuthMode;
-use crate::{AuthContext, widgets::ProgressBar};
+use crate::{
+    auth::{Context, Response, State},
+    widgets::ProgressBar,
+};
+use codee::string::FromToStringCodec;
 use gloo_net::http::Request;
 use leptos::{
     context::use_context, ev::SubmitEvent, leptos_dom::log, prelude::*, task::spawn_local,
 };
+use leptos_use::storage::use_local_storage;
 use serde::Serialize;
 
 /// Struct representing the JSON request for login.
@@ -27,7 +32,7 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
 
     let is_loading = RwSignal::new(false);
     let error_msg = RwSignal::new(None::<String>);
-    let context = use_context::<AuthContext>().expect("Missing auth context");
+    let context = use_context::<Context>().expect("Missing auth context");
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
@@ -44,9 +49,18 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
 
             match response {
                 Ok(res) => match res.status() {
-                    201 => {
-                        context.is_logged_in.set(true);
-                    }
+                    201 => match res.json::<Response>().await {
+                        Ok(body) => {
+                            let (_, set_previously_logged, _) =
+                                use_local_storage::<bool, FromToStringCodec>("previously_logged");
+                            set_previously_logged.set(true);
+                            context.state.set(State::Logged(body.access_token))
+                        }
+                        Err(err) => {
+                            error_msg.set(Some("Unexpected data format from server.".to_string()));
+                            log!("Error decoding response: {}", err);
+                        }
+                    },
                     401 => {
                         error_msg.set(Some("Incorrect email or password.".to_string()));
                     }

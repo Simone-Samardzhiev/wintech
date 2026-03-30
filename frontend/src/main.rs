@@ -1,38 +1,45 @@
 mod account;
+mod auth;
 mod home;
 mod widgets;
 
-use leptos::prelude::*;
+use codee::string::FromToStringCodec;
+use leptos::{prelude::*, task::spawn_local, logging::log};
 use leptos_router::{
     components::{A, Route, Router, Routes},
     path,
 };
+use leptos_use::storage::use_local_storage;
 
 /// Custom view displayed when a page is not found.
 #[component]
 pub fn NotFound() -> impl IntoView {
     view! {
-        // Wrap the image in a container
         <div class="not-found-container">
             <img class="not-found-img" src="/assets/not_found.png" alt="Oops! It looks like this page is broken." />
         </div>
     }
 }
 
-#[derive(Copy, Clone)]
-struct AuthContext {
-    is_logged_in: RwSignal<bool>,
-}
-
 /// The app entry point.
 #[component]
 fn App() -> impl IntoView {
-    provide_context(AuthContext {
-        is_logged_in: RwSignal::new(false),
-    });
+    let context = auth::Context::default();
+    let (get_previously_logged, _, _) =
+        use_local_storage::<bool, FromToStringCodec>("previously_logged");
+
+    if get_previously_logged.get() {
+        log!("Here1");
+        spawn_local(async move {
+            let _ = context.refresh_session().await;
+        });
+    }
+
+    provide_context(context);
 
     view! {
         <Router>
+            <auth::AuthAlert/>
             <nav>
                 <A href="/">"Home"</A>
                 <A href="/account">"Account"</A>

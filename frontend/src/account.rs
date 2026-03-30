@@ -1,7 +1,7 @@
 mod login;
 mod register;
 
-use crate::AuthContext;
+use crate::auth;
 use leptos::prelude::*;
 use login::Login;
 use register::Register;
@@ -43,10 +43,10 @@ fn Dashboard() -> impl IntoView {
 /// and [`Dashboard`] otherwise.
 #[component]
 pub fn Account() -> impl IntoView {
-    let context = use_context::<AuthContext>().expect("Missing auth context");
+    let context = use_context::<auth::Context>().expect("Missing auth context");
 
     view! {
-        <Show when=move || context.is_logged_in.get() fallback=move || view! {<Auth/>}>
+        <Show when=move || context.is_expired() fallback=move || view! {<Auth/>}>
             <Dashboard/>
         </Show>
     }
