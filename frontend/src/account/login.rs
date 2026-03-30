@@ -1,9 +1,8 @@
 use super::AuthMode;
 use crate::{
-    auth::{Context, Response, State},
+    auth::{Context, Response},
     widgets::ProgressBar,
 };
-use codee::string::FromToStringCodec;
 use gloo_net::http::Request;
 use leptos::{
     context::use_context,
@@ -15,7 +14,6 @@ use leptos::{
     prelude::*,
     task::spawn_local,
 };
-use leptos_use::storage::use_local_storage;
 use serde::Serialize;
 
 /// Struct representing the JSON request for login.
@@ -57,12 +55,7 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
             match response {
                 Ok(res) => match res.status() {
                     201 => match res.json::<Response>().await {
-                        Ok(body) => {
-                            let (_, set_previously_logged, _) =
-                                use_local_storage::<bool, FromToStringCodec>("previously_logged");
-                            set_previously_logged.set(true);
-                            context.state.set(State::Logged(body.access_token))
-                        }
+                        Ok(body) => context.token.set(Some(body.access_token)),
                         Err(err) => {
                             error_msg.set(Some("Unexpected data format from server.".to_string()));
                             log!("Error decoding response: {}", err);
@@ -108,7 +101,7 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
                     .attr("name", "password")
                     .prop("value", move || password.get())
                     .on(ev::input, move |ev| {
-                        email.set(event_target_value(&ev));
+                        password.set(event_target_value(&ev));
                     }),
                 move || {
                     error_msg

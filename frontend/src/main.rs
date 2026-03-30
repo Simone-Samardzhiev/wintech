@@ -31,7 +31,6 @@ fn App() -> impl IntoView {
         RouterProps::builder()
             .children(ToChildren::to_children(|| {
                 (
-                    auth::AuthAlert(),
                     nav().child((
                         A(AProps::builder()
                             .href("/")

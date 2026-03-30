@@ -2,6 +2,7 @@ mod dashboard;
 mod login;
 mod register;
 
+use crate::account::dashboard::Dashboard;
 use crate::auth;
 use leptos::{either::Either, html::div, prelude::*};
 use login::{Login, LoginProps};
@@ -37,9 +38,8 @@ fn Auth() -> impl IntoView {
 pub fn Account() -> impl IntoView {
     let context = use_context::<auth::Context>().expect("Missing auth context");
 
-    view! {
-        <Show when=move || context.is_logged_in() fallback=move || view! {<Auth/>}>
-            <dashboard::Dashboard/>
-        </Show>
+    move || match context.token.get() {
+        Some(_) => Either::Left(Dashboard()),
+        None => Either::Right(Auth()),
     }
 }

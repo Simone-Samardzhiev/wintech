@@ -195,7 +195,7 @@ pub fn Register(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
                             .child("Account created successfully!"),
                         button()
                             .on(ev::click, move |_| set_mode.set(AuthMode::Login))
-                            .class("success")
+                            .class("auth-btn")
                             .child("Go to Login"),
                     )),
                 )
