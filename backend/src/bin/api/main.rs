@@ -23,7 +23,6 @@ async fn main() {
 
     let pool = postgres::connect(&config.database_url).await.unwrap();
 
-    // User
     let user_repository = postgres::user::UserRepository::new(pool.clone());
     let token_repository = postgres::user::TokenRepository::new(pool.clone());
     let user_service = domain::user::service::DefaultUserService::new(
@@ -39,7 +38,6 @@ async fn main() {
         config.jwt_access_expiry,
     );
 
-    // Window
     let window_repository = postgres::window::WindowRepository::new(pool.clone());
     let window_service = domain::window::service::DefaultWindowService::new(window_repository);
 

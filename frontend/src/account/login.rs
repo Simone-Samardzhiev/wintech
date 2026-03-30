@@ -10,7 +10,7 @@ use leptos::{
     ev,
     ev::SubmitEvent,
     html::{button, div, form, h2, input, span},
-    leptos_dom::log,
+    leptos_dom::error,
     prelude::*,
     task::spawn_local,
 };
@@ -57,22 +57,22 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
                     201 => match res.json::<Response>().await {
                         Ok(body) => context.token.set(Some(body.access_token)),
                         Err(err) => {
-                            error_msg.set(Some("Unexpected data format from server.".to_string()));
-                            log!("Error decoding response: {}", err);
+                            error_msg.set(Some("Unexpected response from server.".to_string()));
+                            error!("Error decoding response: {}", err);
                         }
                     },
                     401 => {
                         error_msg.set(Some("Incorrect email or password.".to_string()));
                     }
                     _ => {
-                        log!("Unexpected server response: {}", res.status());
+                        error!("Unexpected response status code: {}", res.status());
                         error_msg.set(Some(
                             "A server error occurred. Please try again.".to_string(),
                         ));
                     }
                 },
                 Err(err) => {
-                    log!("Network request failed: {:?}", err);
+                    error!("Network request failed: {:?}", err);
                     error_msg.set(Some("Failed to connect to the server.".to_string()));
                 }
             }

@@ -7,7 +7,7 @@ use leptos::{
     ev,
     ev::SubmitEvent,
     html::{button, div, form, h2, input, p},
-    leptos_dom::log,
+    leptos_dom::error,
     prelude::*,
     task::spawn_local,
 };
@@ -169,14 +169,14 @@ pub fn Register(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
                         error_msg.set(Some("Email is already in use.".to_string()));
                     }
                     _ => {
-                        log!("Unexpected server response: {}", res.status());
+                        error!("Unexpected response status code: {}", res.status());
                         error_msg.set(Some(
                             "A server error occurred. Please try again.".to_string(),
                         ));
                     }
                 },
                 Err(err) => {
-                    log!("Network request failed: {:?}", err);
+                    error!("Network request failed: {:?}", err);
                     error_msg.set(Some("Failed to connect to the server.".to_string()));
                 }
             }
