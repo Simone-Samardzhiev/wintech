@@ -22,6 +22,7 @@ async fn main() {
     let config = Config::new().unwrap();
 
     let pool = postgres::connect(&config.database_url).await.unwrap();
+    postgres::run_migrations(&pool).await.unwrap();
 
     let user_repository = postgres::user::UserRepository::new(pool.clone());
     let token_repository = postgres::user::TokenRepository::new(pool.clone());
