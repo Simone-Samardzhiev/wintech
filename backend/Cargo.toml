@@ -32,4 +32,3 @@ tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
 email_address = "0.2.9"
 argon2 = { version = "0.5.3", features = ["std"] }
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
-clap = { version = "4.6.0", features = ["derive"] }

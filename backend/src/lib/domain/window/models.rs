@@ -1,6 +1,6 @@
 use crate::domain::window::models::WindowValidationError::InvalidPreferredTemperature;
 use thiserror::Error;
-use time::{OffsetDateTime, Time};
+use time::Time;
 use uuid::Uuid;
 
 #[derive(Error, Debug)]
@@ -53,23 +53,6 @@ impl From<PreferredWindowTemp> for i16 {
 pub enum WindowActionKind {
     Open,
     Close,
-}
-
-#[derive(Debug)]
-pub struct WindowAction {
-    id: Uuid,
-    action: WindowActionKind,
-    occurred_at: OffsetDateTime,
-}
-
-impl WindowAction {
-    pub fn new(id: Uuid, action: WindowActionKind, occurred_at: OffsetDateTime) -> Self {
-        Self {
-            id,
-            action,
-            occurred_at,
-        }
-    }
 }
 
 #[derive(Debug)]

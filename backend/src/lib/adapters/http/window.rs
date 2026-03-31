@@ -74,7 +74,7 @@ impl From<Window> for WindowResponse {
 pub async fn get_windows<U, W, T>(
     State(state): State<Arc<AppState<U, W, T>>>,
     Extension(token): Extension<Token>,
-) -> Result<Json<Vec<WindowResponse>>, WindowError>
+) -> Result<(StatusCode, Json<Vec<WindowResponse>>), WindowError>
 where
     U: UserService,
     W: WindowService,
@@ -88,5 +88,5 @@ where
         .map(|window| WindowResponse::from(window))
         .collect();
 
-    Ok(Json(result))
+    Ok((StatusCode::OK, Json(result)))
 }

@@ -1,4 +1,7 @@
-use gloo_net::{Error as GlooError, http::Request};
+use gloo_net::{
+    Error as GlooError,
+    http::{Request, RequestBuilder, Response as HttpResponse},
+};
 use leptos::prelude::*;
 use serde::Deserialize;
 use thiserror::Error;
@@ -22,7 +25,7 @@ pub enum Error {
     #[error("Unexpected response")]
     UnexpectedResponse(GlooError),
 
-    #[error("Unexpected error")]
+    #[error("Failed to connect to server")]
     Network(GlooError),
 }
 
@@ -43,6 +46,63 @@ pub async fn refresh_session() -> Result<Response, Error> {
         401 => Err(Error::ExpiredSession),
         _ => Err(Error::UnexpectedStatusCode(response.status())),
     }
+}
+
+#[derive(Debug, Error)]
+pub enum AuthenticateRequestError {
+    #[error("Error refreshing session")]
+    AuthFailed(#[from] Error),
+
+    #[error("Failed to connect to server")]
+    Network(GlooError),
+}
+
+pub struct AuthenticateRequestResponse {
+    pub http_response: HttpResponse,
+    pub access_token: Option<String>,
+}
+
+impl AuthenticateRequestResponse {
+    pub fn new(
+        http_response: HttpResponse,
+        access_token: Option<String>,
+    ) -> AuthenticateRequestResponse {
+        AuthenticateRequestResponse {
+            access_token,
+            http_response,
+        }
+    }
+}
+
+pub async fn authenticate_request<F>(
+    token: &str,
+    factory: F,
+) -> Result<AuthenticateRequestResponse, AuthenticateRequestError>
+where
+    F: Fn() -> RequestBuilder,
+{
+    let response = factory()
+        .header("Authorization", &format!("Bearer {}", token))
+        .send()
+        .await
+        .map_err(AuthenticateRequestError::Network)?;
+
+    let auth_response = match response.status() {
+        401 => refresh_session().await?,
+        _ => return Ok(AuthenticateRequestResponse::new(response, None)),
+    };
+
+    Ok(AuthenticateRequestResponse::new(
+        factory()
+            .header(
+                "Authorization",
+                &format!("Bearer {}", auth_response.access_token),
+            )
+            .send()
+            .await
+            .map_err(AuthenticateRequestError::Network)?,
+        Some(auth_response.access_token),
+    ))
 }
 
 #[derive(Copy, Clone, Debug)]
