@@ -25,7 +25,7 @@ impl crate::domain::window::ports::WindowRepository for WindowRepository {
                 id,
                 preferred_temp,
                 preferred_wake_up,
-                preferred_wake_up
+                preferred_bedtime
                 FROM windows
                 WHERE user_id = $1
                 "#,
@@ -41,6 +41,6 @@ impl crate::domain::window::ports::WindowRepository for WindowRepository {
             windows.push(window);
         }
 
-        Ok(windows)
+        Ok(Vec::from(windows))
     }
 }
