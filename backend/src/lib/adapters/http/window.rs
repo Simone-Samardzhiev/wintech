@@ -49,6 +49,7 @@ impl IntoResponse for WindowError {
     }
 }
 
+/// JSON response for [`Window`].
 #[derive(Debug, Serialize)]
 pub struct WindowResponse {
     id: Uuid,
@@ -71,6 +72,7 @@ impl From<Window> for WindowResponse {
     }
 }
 
+/// Function handling window fetching.
 pub async fn get_windows<U, W, T>(
     State(state): State<Arc<AppState<U, W, T>>>,
     Extension(token): Extension<Token>,

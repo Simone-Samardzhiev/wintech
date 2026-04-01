@@ -3,14 +3,24 @@ use crate::domain::window::{
     models::{Window, WindowError},
     ports::WindowRepository,
 };
+use uuid::Uuid;
 
+/// Provides access to windows business logic.
 pub trait WindowService: Send + Sync + 'static {
+    /// Retrieves [`Vec<Window>`] by user id.
+    ///
+    /// # Returns
+    /// [`Ok(Vec<Windows>)`] holding the retrieved windows.
+    ///
+    /// # Errors
+    /// [WindowError::Unknown] if unexpected error occurs.
     fn get_windows(
         &self,
         token: Token,
     ) -> impl Future<Output = Result<Vec<Window>, WindowError>> + Send;
 }
 
+/// Default implementation of [`WindowService`].
 pub struct DefaultWindowService<R>
 where
     R: WindowRepository,

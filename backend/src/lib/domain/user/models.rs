@@ -188,7 +188,7 @@ impl AsRef<str> for UserPassword {
     }
 }
 
-/// Valid user with hashed password.
+/// User entity.
 #[derive(Debug)]
 pub struct User {
     pub id: Uuid,
