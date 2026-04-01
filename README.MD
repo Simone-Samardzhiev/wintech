@@ -1,7 +1,7 @@
 # Wintech
 
 Work in progress restfull API for ordering and
-managing smart windows
+managing smart windows.
 
 ## Table of content
 
@@ -11,7 +11,7 @@ managing smart windows
 
 # Installation
 
-Follow this steps to run the API
+Follow this steps to run the API.
 
 ### Prerequisites
 
@@ -52,7 +52,7 @@ Follow this steps to run the API
 
 ## Docker deployment
 
-Follow this steps to run the API using docker
+Follow this steps to run the API using docker.
 
 1. **Clone the repository**
 
@@ -67,8 +67,8 @@ Follow this steps to run the API using docker
 
 3. **Run the container**
 
-   The environment path FRONTEND_PATH should be dist as
-   docker will place the static file there
+   The environment path FRONTEND_PATH equals **dist** as
+   docker will place the static files there
 
    ```bash
    docker run --init -p 8080:8080 --env-file .env wintech     
