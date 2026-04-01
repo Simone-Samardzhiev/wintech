@@ -83,7 +83,13 @@ where
     let result = state
         .window_service
         .get_windows(token)
-        .await?
+        .await
+        .map_err(|e| {
+            if let WindowError::Unknown(ref error) = e {
+                tracing::error!(error = ?error)
+            }
+            e
+        })?
         .into_iter()
         .map(|window| WindowResponse::from(window))
         .collect();
