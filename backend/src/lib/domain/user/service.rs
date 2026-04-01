@@ -140,7 +140,7 @@ where
 
     async fn refresh_session(&self, token: &Token) -> Result<Tokens, UserError> {
         match token.kind {
-            TokenKind::Access => return Err(UserError::InvalidTokenType),
+            TokenKind::Access => return Err(UserError::InvalidTokenKind),
             TokenKind::Refresh => {}
         }
 

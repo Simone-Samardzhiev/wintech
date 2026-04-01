@@ -54,7 +54,7 @@ pub enum UserError {
     InvalidToken,
 
     #[error("Invalid token type")]
-    InvalidTokenType,
+    InvalidTokenKind,
 
     #[error("Token with id ({0}) does not exist")]
     TokenNotFoundById(Uuid),
@@ -278,7 +278,7 @@ impl TryFrom<&str> for TokenKind {
         match value {
             "access" => Ok(TokenKind::Access),
             "refresh" => Ok(TokenKind::Refresh),
-            _ => Err(UserError::InvalidTokenType),
+            _ => Err(UserError::InvalidTokenKind),
         }
     }
 }

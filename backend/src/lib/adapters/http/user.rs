@@ -55,9 +55,9 @@ impl IntoResponse for UserError {
             UserError::InvalidToken => {
                 (StatusCode::UNAUTHORIZED, "Invalid token.".to_string(), None)
             }
-            UserError::InvalidTokenType => (
+            UserError::InvalidTokenKind => (
                 StatusCode::UNAUTHORIZED,
-                "Invalid token type.".to_string(),
+                "Invalid token kind.".to_string(),
                 None,
             ),
             UserError::TokenNotFoundById(id) => (

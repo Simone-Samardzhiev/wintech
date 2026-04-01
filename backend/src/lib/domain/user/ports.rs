@@ -82,7 +82,7 @@ pub trait TokenCoder: Send + Sync + 'static {
     /// # Errors
     /// [`UserError::InvalidToken`] if the decoding fails.
     ///
-    /// [`UserError::InvalidTokenType`] if the token type is invalid.
+    /// [`UserError::InvalidTokenKind`] if the token type is invalid.
     ///
     /// [`UserError::Unknown`]  if unexpected error occurs.
     fn decode(&self, token: &str) -> Result<Token, UserError>;
