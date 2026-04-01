@@ -46,8 +46,21 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
         error_msg.set(None);
 
         spawn_local(async move {
+            let email = email.get();
+            let password = password.get();
+
+            if email.is_empty() {
+                error_msg.set(Some("Email cannot be empty.".to_string()));
+                return;
+            }
+
+            if password.is_empty() {
+                error_msg.set(Some("Password cannot be empty.".to_string()));
+                return;
+            }
+
             let response = Request::post("/api/v1/users/login")
-                .json(&LoginRequest::new(email.get(), password.get()))
+                .json(&LoginRequest::new(email, password))
                 .expect("Failed to serialize login request")
                 .send()
                 .await;
