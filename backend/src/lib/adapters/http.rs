@@ -1,11 +1,14 @@
 mod middleware;
+pub mod order;
 mod user;
 pub mod window;
 
-use crate::domain::window::service::WindowService;
 use crate::{
     config::Config,
-    domain::{user::ports::TokenCoder, user::service::UserService},
+    domain::{
+        order::service::OrderService, user::ports::TokenCoder, user::service::UserService,
+        window::service::WindowService,
+    },
 };
 use axum::{
     extract::FromRef,
@@ -17,34 +20,39 @@ use time::Duration;
 use tower_http::services::{ServeDir, ServeFile};
 
 #[derive(Clone)]
-struct AppState<U, T, W>
+struct AppState<U, T, W, O>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
     pub user_service: U,
     pub token_coder: T,
     pub window_service: W,
+    pub order_service: O,
     pub cookie_expiry: Duration,
 }
 
-impl<U, T, W> AppState<U, T, W>
+impl<U, T, W, O> AppState<U, T, W, O>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
     pub fn new(
         user_service: U,
         window_service: W,
         token_coder: T,
+        order_service: O,
         cookie_expiry: Duration,
     ) -> Self {
         Self {
             user_service,
             window_service,
             token_coder,
+            order_service,
             cookie_expiry,
         }
     }
@@ -64,13 +72,14 @@ where
     }
 }
 
-impl<U, T, W> FromRef<AppState<U, T, W>> for UserState<U>
+impl<U, T, W, O> FromRef<AppState<U, T, W, O>> for UserState<U>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
-    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+    fn from_ref(app_state: &AppState<U, T, W, O>) -> Self {
         Self::new(app_state.user_service.clone())
     }
 }
@@ -92,13 +101,14 @@ where
     }
 }
 
-impl<U, T, W> FromRef<AppState<U, T, W>> for AuthState<T>
+impl<U, T, W, O> FromRef<AppState<U, T, W, O>> for AuthState<T>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
-    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+    fn from_ref(app_state: &AppState<U, T, W, O>) -> Self {
         Self::new(app_state.token_coder.clone(), app_state.cookie_expiry)
     }
 }
@@ -117,14 +127,41 @@ where
     }
 }
 
-impl<U, T, W> FromRef<AppState<U, T, W>> for WindowState<W>
+impl<U, T, W, O> FromRef<AppState<U, T, W, O>> for WindowState<W>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
-    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+    fn from_ref(app_state: &AppState<U, T, W, O>) -> Self {
         Self::new(app_state.window_service.clone())
+    }
+}
+
+#[derive(Clone)]
+pub struct OrderState<O: OrderService> {
+    pub order_service: O,
+}
+
+impl<O> OrderState<O>
+where
+    O: OrderService,
+{
+    pub fn new(order_service: O) -> Self {
+        Self { order_service }
+    }
+}
+
+impl<U, T, W, O> FromRef<AppState<U, T, W, O>> for OrderState<O>
+where
+    U: UserService,
+    T: TokenCoder,
+    W: WindowService,
+    O: OrderService,
+{
+    fn from_ref(app_state: &AppState<U, T, W, O>) -> Self {
+        Self::new(app_state.order_service.clone())
     }
 }
 
@@ -145,11 +182,12 @@ impl ErrorResponse {
     }
 }
 
-pub struct Router<U, T, W>
+pub struct Router<U, T, W, O>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
     address: String,
     frontend_path: String,
@@ -157,15 +195,23 @@ where
     user_service: U,
     window_service: W,
     token_coder: T,
+    order_service: O,
 }
 
-impl<U, T, W> Router<U, T, W>
+impl<U, T, W, O> Router<U, T, W, O>
 where
     U: UserService,
     T: TokenCoder,
     W: WindowService,
+    O: OrderService,
 {
-    pub fn new(config: Config, user_service: U, token_coder: T, window_service: W) -> Self {
+    pub fn new(
+        config: Config,
+        user_service: U,
+        token_coder: T,
+        window_service: W,
+        order_service: O,
+    ) -> Self {
         Router {
             address: config.address,
             frontend_path: config.frontend_path,
@@ -173,6 +219,7 @@ where
             user_service,
             window_service,
             token_coder,
+            order_service,
         }
     }
 
@@ -181,6 +228,7 @@ where
             self.user_service,
             self.window_service,
             self.token_coder,
+            self.order_service,
             self.cookie_expiry,
         );
 
@@ -210,6 +258,12 @@ where
                                     state.clone(),
                                     middleware::jwt_middleware,
                                 )),
+                        )
+                        .nest(
+                            "/orders",
+                            axum::Router::new().route("/", post(order::order)).layer(
+                                from_fn_with_state(state.clone(), middleware::jwt_middleware),
+                            ),
                         ),
                 )
                 .fallback_service(ServeDir::new(&self.frontend_path).not_found_service(

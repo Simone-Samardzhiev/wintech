@@ -44,14 +44,23 @@ async fn main() {
     let window_repository = postgres::window::WindowRepository::new(pool.clone());
     let window_service = domain::window::service::DefaultWindowService::new(window_repository);
 
+    let order_repository = postgres::order::OrderRepository::new(pool.clone());
+    let order_service = domain::order::service::DefaultOrderService::new(order_repository);
+
     tracing::info!(
         address = %config.address,
         fronendPath = %config.frontend_path,
         "Starting server"
     );
 
-    http::Router::new(config, user_service, token_coder, window_service)
-        .listen()
-        .await
-        .unwrap();
+    http::Router::new(
+        config,
+        user_service,
+        token_coder,
+        window_service,
+        order_service,
+    )
+    .listen()
+    .await
+    .unwrap();
 }

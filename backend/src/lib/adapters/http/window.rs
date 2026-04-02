@@ -1,11 +1,9 @@
 use super::{ErrorResponse, WindowState};
-use crate::{
-    domain::{
-        user::{models::Token},
-        window::{
-            models::{Window, WindowError},
-            service::WindowService,
-        },
+use crate::domain::{
+    user::models::Token,
+    window::{
+        models::{Window, WindowError},
+        service::WindowService,
     },
 };
 use axum::{
@@ -32,6 +30,7 @@ impl IntoResponse for WindowError {
             WindowError::InvalidToken => {
                 (StatusCode::UNAUTHORIZED, "Invalid token.".to_string(), None)
             }
+
             WindowError::Unknown(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error.".to_string(),
