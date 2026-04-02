@@ -3,10 +3,9 @@ use crate::domain::window::{
     models::{Window, WindowError},
     ports::WindowRepository,
 };
-use uuid::Uuid;
 
 /// Provides access to windows business logic.
-pub trait WindowService: Send + Sync + 'static {
+pub trait WindowService: Send + Sync + Clone + 'static {
     /// Retrieves [`Vec<Window>`] by user id.
     ///
     /// # Returns
@@ -21,6 +20,7 @@ pub trait WindowService: Send + Sync + 'static {
 }
 
 /// Default implementation of [`WindowService`].
+#[derive(Clone)]
 pub struct DefaultWindowService<R>
 where
     R: WindowRepository,

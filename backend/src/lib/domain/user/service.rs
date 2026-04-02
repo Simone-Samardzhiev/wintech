@@ -6,7 +6,7 @@ use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
 /// Provides access to user business logic.
-pub trait UserService: Send + Sync + 'static {
+pub trait UserService: Send + Sync + Clone + 'static {
     /// Registers a [`User`]
     ///
     /// # Errors
@@ -39,6 +39,7 @@ pub trait UserService: Send + Sync + 'static {
 }
 
 /// Default implementation of [`UserService`].
+#[derive(Clone)]
 pub struct DefaultUserService<UR, TR, P, T>
 where
     UR: UserRepository,

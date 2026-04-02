@@ -1,8 +1,7 @@
-use super::ErrorResponse;
+use super::{ErrorResponse, WindowState};
 use crate::{
-    adapters::http::AppState,
     domain::{
-        user::{models::Token, ports::TokenCoder, service::UserService},
+        user::{models::Token},
         window::{
             models::{Window, WindowError},
             service::WindowService,
@@ -16,7 +15,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
-use std::sync::Arc;
 use time::Time;
 use uuid::Uuid;
 
@@ -73,14 +71,12 @@ impl From<Window> for WindowResponse {
 }
 
 /// Function handling window fetching.
-pub async fn get_windows<U, W, T>(
-    State(state): State<Arc<AppState<U, W, T>>>,
+pub async fn get_windows<T>(
+    State(state): State<WindowState<T>>,
     Extension(token): Extension<Token>,
 ) -> Result<(StatusCode, Json<Vec<WindowResponse>>), WindowError>
 where
-    U: UserService,
-    W: WindowService,
-    T: TokenCoder,
+    T: WindowService,
 {
     let result = state
         .window_service

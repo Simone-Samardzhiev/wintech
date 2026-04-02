@@ -8,31 +8,32 @@ use crate::{
     domain::{user::ports::TokenCoder, user::service::UserService},
 };
 use axum::{
+    extract::FromRef,
     middleware::from_fn_with_state,
     routing::{get, post},
 };
 use serde::Serialize;
-use std::sync::Arc;
 use time::Duration;
 use tower_http::services::{ServeDir, ServeFile};
 
-pub struct AppState<U, W, T>
+#[derive(Clone)]
+struct AppState<U, T, W>
 where
     U: UserService,
-    W: WindowService,
     T: TokenCoder,
+    W: WindowService,
 {
     pub user_service: U,
-    pub window_service: W,
     pub token_coder: T,
+    pub window_service: W,
     pub cookie_expiry: Duration,
 }
 
-impl<U, W, T> AppState<U, W, T>
+impl<U, T, W> AppState<U, T, W>
 where
     U: UserService,
-    W: WindowService,
     T: TokenCoder,
+    W: WindowService,
 {
     pub fn new(
         user_service: U,
@@ -49,15 +50,82 @@ where
     }
 }
 
-pub struct Router<U, W, T>
+#[derive(Clone)]
+pub struct UserState<U: UserService> {
+    pub user_service: U,
+}
+
+impl<U> UserState<U>
 where
     U: UserService,
+{
+    pub fn new(user_service: U) -> Self {
+        Self { user_service }
+    }
+}
+
+impl<U, T, W> FromRef<AppState<U, T, W>> for UserState<U>
+where
+    U: UserService,
+    T: TokenCoder,
     W: WindowService,
+{
+    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+        Self::new(app_state.user_service.clone())
+    }
+}
+
+#[derive(Clone)]
+pub struct AuthState<T: TokenCoder> {
+    pub token_coder: T,
+    pub cookie_expiry: Duration,
+}
+impl<T> AuthState<T>
+where
     T: TokenCoder,
 {
-    address: String,
-    frontend_path: String,
-    state: AppState<U, W, T>,
+    pub fn new(token_coder: T, cookie_expiry: Duration) -> Self {
+        Self {
+            token_coder,
+            cookie_expiry,
+        }
+    }
+}
+
+impl<U, T, W> FromRef<AppState<U, T, W>> for AuthState<T>
+where
+    U: UserService,
+    T: TokenCoder,
+    W: WindowService,
+{
+    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+        Self::new(app_state.token_coder.clone(), app_state.cookie_expiry)
+    }
+}
+
+#[derive(Clone)]
+pub struct WindowState<W: WindowService> {
+    pub window_service: W,
+}
+
+impl<W> WindowState<W>
+where
+    W: WindowService,
+{
+    pub fn new(window_service: W) -> Self {
+        Self { window_service }
+    }
+}
+
+impl<U, T, W> FromRef<AppState<U, T, W>> for WindowState<W>
+where
+    U: UserService,
+    T: TokenCoder,
+    W: WindowService,
+{
+    fn from_ref(app_state: &AppState<U, T, W>) -> Self {
+        Self::new(app_state.window_service.clone())
+    }
 }
 
 #[derive(Serialize)]
@@ -77,22 +145,44 @@ impl ErrorResponse {
     }
 }
 
-impl<U, W, T> Router<U, W, T>
+pub struct Router<U, T, W>
 where
     U: UserService,
-    W: WindowService,
     T: TokenCoder,
+    W: WindowService,
 {
-    pub fn new(config: Config, state: AppState<U, W, T>) -> Self {
+    address: String,
+    frontend_path: String,
+    cookie_expiry: Duration,
+    user_service: U,
+    window_service: W,
+    token_coder: T,
+}
+
+impl<U, T, W> Router<U, T, W>
+where
+    U: UserService,
+    T: TokenCoder,
+    W: WindowService,
+{
+    pub fn new(config: Config, user_service: U, token_coder: T, window_service: W) -> Self {
         Router {
             address: config.address,
             frontend_path: config.frontend_path,
-            state,
+            cookie_expiry: config.jwt_refresh_expiry,
+            user_service,
+            window_service,
+            token_coder,
         }
     }
 
     pub async fn listen(self) -> anyhow::Result<()> {
-        let state = Arc::new(self.state);
+        let state = AppState::new(
+            self.user_service,
+            self.window_service,
+            self.token_coder,
+            self.cookie_expiry,
+        );
 
         let router =
             axum::Router::new()

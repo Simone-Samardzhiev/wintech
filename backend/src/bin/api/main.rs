@@ -26,15 +26,17 @@ async fn main() {
 
     let user_repository = postgres::user::UserRepository::new(pool.clone());
     let token_repository = postgres::user::TokenRepository::new(pool.clone());
+    let token_coder = token_hashers::JWTTokenCoder::new(
+        config.jwt_secret.clone(),
+        config.jwt_issuer.clone(),
+        config.jwt_audience.clone(),
+    );
+
     let user_service = domain::user::service::DefaultUserService::new(
         user_repository,
         token_repository,
         password_hashers::ArgonPasswordHasher,
-        token_hashers::JWTTokenCoder::new(
-            config.jwt_secret.clone(),
-            config.jwt_issuer.clone(),
-            config.jwt_audience.clone(),
-        ),
+        token_coder.clone(),
         config.jwt_refresh_expiry,
         config.jwt_access_expiry,
     );
@@ -48,17 +50,8 @@ async fn main() {
         "Starting server"
     );
 
-    let services = http::AppState::new(
-        user_service,
-        window_service,
-        token_hashers::JWTTokenCoder::new(
-            config.jwt_secret.clone(),
-            config.jwt_issuer.clone(),
-            config.jwt_audience.clone(),
-        ),
-        config.jwt_refresh_expiry,
-    );
-    let router = http::Router::new(config, services);
-
-    router.listen().await.unwrap();
+    http::Router::new(config, user_service, token_coder, window_service)
+        .listen()
+        .await
+        .unwrap();
 }

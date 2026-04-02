@@ -1,9 +1,8 @@
 use super::models::{Window, WindowError};
 use uuid::Uuid;
 
-
 /// Provides access to windows persistence storage.
-pub trait WindowRepository: Send + Sync + 'static {
+pub trait WindowRepository: Send + Sync + Clone + 'static {
     /// Retrieves [`Vec<Window>`] by user id.
     ///
     /// # Returns

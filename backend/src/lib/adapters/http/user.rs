@@ -1,10 +1,11 @@
-use super::{AppState, ErrorResponse};
-use crate::domain::user::{
-    models::{Token, UserError},
-    ports::TokenCoder,
-    service::UserService,
+use super::{AuthState, ErrorResponse, UserState};
+use crate::domain::{
+    user::{
+        models::{Token, UserError},
+        ports::TokenCoder,
+        service::UserService,
+    },
 };
-use crate::domain::window::service::WindowService;
 use axum::{
     Json,
     extract::{Extension, State},
@@ -13,7 +14,6 @@ use axum::{
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use time::OffsetDateTime;
 
 impl IntoResponse for UserError {
@@ -89,14 +89,12 @@ pub struct RegisterRequest {
 }
 
 /// Function handling user registration.
-pub async fn register<U, W, T>(
-    State(state): State<Arc<AppState<U, W, T>>>,
+pub async fn register<T>(
+    State(state): State<UserState<T>>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<StatusCode, UserError>
 where
-    U: UserService,
-    W: WindowService,
-    T: TokenCoder,
+    T: UserService,
 {
     let request = crate::domain::user::models::RegisterRequest::parse(
         payload.username.clone(),
@@ -155,17 +153,17 @@ impl From<crate::domain::user::models::Tokens> for TokensResponse {
 }
 
 /// Function handling user login.
-pub async fn login<U, W, T>(
-    State(state): State<Arc<AppState<U, W, T>>>,
+pub async fn login<U, T>(
+    State(user_state): State<UserState<U>>,
+    State(auth_state): State<AuthState<T>>,
     jar: CookieJar,
     Json(payload): Json<LoginRequest>,
 ) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
 where
     U: UserService,
-    W: WindowService,
     T: TokenCoder,
 {
-    let tokens = state
+    let tokens = user_state
         .user_service
         .login(crate::domain::user::models::LoginRequest::new(
             payload.email.clone(),
@@ -187,7 +185,7 @@ where
         .path("/")
         .http_only(true)
         .same_site(SameSite::Strict)
-        .expires(OffsetDateTime::now_utc() + state.cookie_expiry)
+        .expires(OffsetDateTime::now_utc() + auth_state.cookie_expiry)
         .build();
 
     let update_jar = jar.add(cookie);
@@ -200,17 +198,17 @@ where
 }
 
 /// Function handling user login.
-pub async fn refresh_session<U, W, T>(
-    State(state): State<Arc<AppState<U, W, T>>>,
+pub async fn refresh_session<U, T>(
+    State(user_state): State<UserState<U>>,
+    State(auth_state): State<AuthState<T>>,
     Extension(token): Extension<Token>,
     jar: CookieJar,
 ) -> Result<(StatusCode, CookieJar, Json<TokensResponse>), UserError>
 where
     U: UserService,
-    W: WindowService,
     T: TokenCoder,
 {
-    let tokens = state
+    let tokens = user_state
         .user_service
         .refresh_session(&token)
         .await
@@ -227,7 +225,7 @@ where
         .path("/")
         .http_only(true)
         .same_site(SameSite::Strict)
-        .expires(OffsetDateTime::now_utc() + state.cookie_expiry)
+        .expires(OffsetDateTime::now_utc() + auth_state.cookie_expiry)
         .build();
 
     let update_jar = jar.add(cookie);
