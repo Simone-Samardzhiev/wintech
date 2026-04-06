@@ -18,7 +18,7 @@ async fn main() {
         )
         .init();
 
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     let config = Config::new().unwrap();
 
     let pool = postgres::connect(&config.database_url).await.unwrap();

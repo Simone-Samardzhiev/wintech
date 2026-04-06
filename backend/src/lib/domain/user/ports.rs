@@ -38,6 +38,13 @@ pub trait TokenRepository: Send + Sync + Clone + 'static {
     ///
     /// [`UserError::Unknown`] if unexpected error occurs.
     fn delete(&self, id: Uuid) -> impl Future<Output = Result<(), UserError>> + Send;
+
+    /// Deletes all expired token.
+    ///
+    /// # Errors
+    ///
+    /// [`UserError::Unknown`] if unexpected error occurs.
+    fn delete_expired(&self) -> impl Future<Output = Result<(), UserError>> + Send;
 }
 
 /// Provides access to password hashing.
