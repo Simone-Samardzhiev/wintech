@@ -12,12 +12,28 @@ pub trait OrderService: Send + Sync + Clone + 'static {
     /// [`Order`] the created order.
     ///
     /// # Errors
-    /// [OrderError::Unknown] if unexpected error occurs.
+    /// [`OrderError::InvalidToken`] if the token is invalid.
+    ///
+    /// [`OrderError::Unknown`] if unexpected error occurs.
     fn place_order(
         &self,
         request: OrderRequest,
         token: Token,
     ) -> impl Future<Output = Result<Order, OrderError>> + Send;
+
+    /// Method to retrieve all orders.
+    ///
+    /// # Returns
+    /// [`Vec<Order>`] holding the orders.
+    ///
+    /// # Errors
+    /// [`OrderError::InvalidToken`] if the token is invalid.
+    ///
+    /// [`OrderError::Unknown`] if unexpected error occurs.
+    fn get_orders(
+        &self,
+        token: Token,
+    ) -> impl Future<Output = Result<Vec<Order>, OrderError>> + Send;
 }
 
 #[derive(Clone)]
@@ -61,5 +77,13 @@ where
         self.repository.save(&order).await?;
 
         Ok(order)
+    }
+
+    async fn get_orders(&self, token: Token) -> Result<Vec<Order>, OrderError> {
+        if token.kind == TokenKind::Refresh {
+            Err(OrderError::InvalidToken)
+        } else {
+            self.repository.get_by_user_id(token.user_id).await
+        }
     }
 }

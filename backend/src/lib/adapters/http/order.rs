@@ -148,3 +148,29 @@ where
 
     Ok((StatusCode::CREATED, Json(order.into())))
 }
+
+pub async fn get_orders<O>(
+    State(state): State<OrderState<O>>,
+    Extension(token): Extension<Token>,
+) -> Result<(StatusCode, Json<Vec<OrderResponse>>), OrderError>
+where
+    O: OrderService,
+{
+    let result = state
+        .order_service
+        .get_orders(token)
+        .await
+        .map_err(|e| {
+            if let OrderError::Unknown(ref error) = e {
+                tracing::error!(
+                    error=?error,
+                )
+            }
+            e
+        })?
+        .into_iter()
+        .map(|o| OrderResponse::from(o))
+        .collect();
+
+    Ok((StatusCode::OK, Json(result)))
+}

@@ -261,9 +261,13 @@ where
                         )
                         .nest(
                             "/orders",
-                            axum::Router::new().route("/", post(order::order)).layer(
-                                from_fn_with_state(state.clone(), middleware::jwt_middleware),
-                            ),
+                            axum::Router::new()
+                                .route("/", post(order::get_orders))
+                                .route("/", get(order::get_orders))
+                                .layer(from_fn_with_state(
+                                    state.clone(),
+                                    middleware::jwt_middleware,
+                                )),
                         ),
                 )
                 .fallback_service(ServeDir::new(&self.frontend_path).not_found_service(

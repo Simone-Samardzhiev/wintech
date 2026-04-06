@@ -41,6 +41,6 @@ impl crate::domain::window::ports::WindowRepository for WindowRepository {
             windows.push(window);
         }
 
-        Ok(Vec::from(windows))
+        Ok(windows)
     }
 }
