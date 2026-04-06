@@ -262,7 +262,7 @@ where
                         .nest(
                             "/orders",
                             axum::Router::new()
-                                .route("/", post(order::get_orders))
+                                .route("/", post(order::order))
                                 .route("/", get(order::get_orders))
                                 .layer(from_fn_with_state(
                                     state.clone(),

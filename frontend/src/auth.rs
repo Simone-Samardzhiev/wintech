@@ -3,7 +3,7 @@ use gloo_net::{
     http::{Request, RequestBuilder, Response as HttpResponse},
 };
 use leptos::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// Response from successfully authorization either by sending a login request
@@ -77,12 +77,18 @@ impl AuthenticateRequestResponse {
 pub async fn authenticate_request<F>(
     token: &str,
     factory: F,
+    body: Option<impl Serialize>,
 ) -> Result<AuthenticateRequestResponse, AuthenticateRequestError>
 where
     F: Fn() -> RequestBuilder,
 {
-    let response = factory()
-        .header("Authorization", &format!("Bearer {}", token))
+    let builder = factory().header("Authorization", &format!("Bearer {}", token));
+    let request = match body {
+        Some(body) => builder.json(&body).expect(""),
+        None => builder.build().expect(""),
+    };
+
+    let response = request
         .send()
         .await
         .map_err(AuthenticateRequestError::Network)?;
