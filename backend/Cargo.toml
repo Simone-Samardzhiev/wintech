@@ -11,6 +11,9 @@ path = "src/lib/lib.rs"
 name = "api"
 path = "src/bin/api/main.rs"
 
+[[bin]]
+name = "cleanup"
+path = "src/bin/cleanup/main.rs"
 
 [dependencies]
 tokio = { version = "1.50.0", features = ["full"] }
@@ -18,7 +21,7 @@ axum = "0.8.8"
 axum-extra = { version = "0.12.5", features = ["cookie"] }
 tower-http = { version = "0.6.8", features = ["fs"] }
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid", "time"] }
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 
 serde = { workspace = true }
 uuid = { workspace = true }

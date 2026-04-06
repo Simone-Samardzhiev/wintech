@@ -112,4 +112,13 @@ impl crate::domain::user::ports::TokenRepository for TokenRepository {
             Err(UserError::TokenNotFoundById(id))
         }
     }
+
+    async fn delete_expired(&self) -> Result<(), UserError> {
+        query("DELETE FROM tokens WHERE expiry <= NOW()")
+            .execute(&self.pool)
+            .await
+            .context("Failed to delete expired tokens")?;
+
+        Ok(())
+    }
 }

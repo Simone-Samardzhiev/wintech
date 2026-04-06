@@ -1,12 +1,9 @@
-use super::ErrorResponse;
-use crate::{
-    adapters::http::AppState,
-    domain::{
-        user::{models::Token, ports::TokenCoder, service::UserService},
-        window::{
-            models::{Window, WindowError},
-            service::WindowService,
-        },
+use super::{ErrorResponse, WindowState};
+use crate::domain::{
+    user::models::Token,
+    window::{
+        models::{Window, WindowError},
+        service::WindowService,
     },
 };
 use axum::{
@@ -16,7 +13,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
-use std::sync::Arc;
 use time::Time;
 use uuid::Uuid;
 
@@ -34,6 +30,7 @@ impl IntoResponse for WindowError {
             WindowError::InvalidToken => {
                 (StatusCode::UNAUTHORIZED, "Invalid token.".to_string(), None)
             }
+
             WindowError::Unknown(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error.".to_string(),
@@ -49,6 +46,7 @@ impl IntoResponse for WindowError {
     }
 }
 
+/// JSON response for [`Window`].
 #[derive(Debug, Serialize)]
 pub struct WindowResponse {
     id: Uuid,
@@ -71,14 +69,13 @@ impl From<Window> for WindowResponse {
     }
 }
 
-pub async fn get_windows<U, W, T>(
-    State(state): State<Arc<AppState<U, W, T>>>,
+/// Function handling window fetching.
+pub async fn get_windows<T>(
+    State(state): State<WindowState<T>>,
     Extension(token): Extension<Token>,
 ) -> Result<(StatusCode, Json<Vec<WindowResponse>>), WindowError>
 where
-    U: UserService,
-    W: WindowService,
-    T: TokenCoder,
+    T: WindowService,
 {
     let result = state
         .window_service

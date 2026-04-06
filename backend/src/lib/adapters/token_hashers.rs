@@ -3,8 +3,11 @@ use crate::domain::user::{
     ports::TokenCoder,
 };
 use anyhow::Context;
-use jsonwebtoken::{DecodingKey, EncodingKey, Header};
+use jsonwebtoken::{
+    Algorithm::HS256, DecodingKey, EncodingKey, Header, Validation, decode, encode,
+};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -34,43 +37,55 @@ impl Claims {
     }
 }
 
-/// Implementation of [`TokenCoder`] using JWT.
-pub struct JWTTokenCoder {
+/// Struct holding data needed to encode and decode tokens.
+struct JWTCoderInner {
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
     issuer: String,
     audience: String,
+    validation: Validation,
 }
 
-impl JWTTokenCoder {
+impl JWTCoderInner {
     pub fn new(secret: String, issuer: String, audience: String) -> Self {
-        JWTTokenCoder {
+        let mut validation = Validation::new(HS256);
+        validation.set_issuer(&[&issuer]);
+        validation.set_audience(&[&audience]);
+
+        Self {
             encoding_key: EncodingKey::from_secret(secret.as_bytes()),
             decoding_key: DecodingKey::from_secret(secret.as_bytes()),
             issuer,
             audience,
+            validation,
+        }
+    }
+}
+
+/// Implementation of [`TokenCoder`] using JWT.
+#[derive(Clone)]
+pub struct JWTTokenCoder {
+    inner: Arc<JWTCoderInner>,
+}
+
+impl JWTTokenCoder {
+    pub fn new(secret: String, issuer: String, audience: String) -> Self {
+        Self {
+            inner: Arc::new(JWTCoderInner::new(secret, issuer, audience)),
         }
     }
 }
 
 impl TokenCoder for JWTTokenCoder {
     fn encode(&self, token: &Token) -> Result<String, UserError> {
-        use jsonwebtoken::encode;
-
-        let claims = Claims::new(token, &self.issuer, &self.audience);
-        let hash = encode(&Header::default(), &claims, &self.encoding_key)
+        let claims = Claims::new(token, &self.inner.issuer, &self.inner.audience);
+        let hash = encode(&Header::default(), &claims, &self.inner.encoding_key)
             .context("Error encoding token")?;
         Ok(hash)
     }
 
     fn decode(&self, token: &str) -> Result<Token, UserError> {
-        use jsonwebtoken::{Algorithm, Validation, decode};
-
-        let mut validation = Validation::new(Algorithm::HS256);
-        validation.set_audience(&[&self.audience]);
-        validation.set_issuer(&[&self.issuer]);
-
-        let claims = decode::<Claims>(token, &self.decoding_key, &validation)
+        let claims = decode::<Claims>(token, &self.inner.decoding_key, &self.inner.validation)
             .map_err(|_| UserError::InvalidToken)?
             .claims;
 

@@ -7,6 +7,7 @@ use argon2::{
 
 /// Implementation of [`crate::domain::user::ports::PasswordHasher`]
 /// using argon2 algorithm.
+#[derive(Clone)]
 pub struct ArgonPasswordHasher;
 
 impl crate::domain::user::ports::PasswordHasher for ArgonPasswordHasher {

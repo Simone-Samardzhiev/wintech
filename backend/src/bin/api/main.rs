@@ -18,7 +18,7 @@ async fn main() {
         )
         .init();
 
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     let config = Config::new().unwrap();
 
     let pool = postgres::connect(&config.database_url).await.unwrap();
@@ -26,15 +26,17 @@ async fn main() {
 
     let user_repository = postgres::user::UserRepository::new(pool.clone());
     let token_repository = postgres::user::TokenRepository::new(pool.clone());
+    let token_coder = token_hashers::JWTTokenCoder::new(
+        config.jwt_secret.clone(),
+        config.jwt_issuer.clone(),
+        config.jwt_audience.clone(),
+    );
+
     let user_service = domain::user::service::DefaultUserService::new(
         user_repository,
         token_repository,
         password_hashers::ArgonPasswordHasher,
-        token_hashers::JWTTokenCoder::new(
-            config.jwt_secret.clone(),
-            config.jwt_issuer.clone(),
-            config.jwt_audience.clone(),
-        ),
+        token_coder.clone(),
         config.jwt_refresh_expiry,
         config.jwt_access_expiry,
     );
@@ -42,23 +44,23 @@ async fn main() {
     let window_repository = postgres::window::WindowRepository::new(pool.clone());
     let window_service = domain::window::service::DefaultWindowService::new(window_repository);
 
+    let order_repository = postgres::order::OrderRepository::new(pool.clone());
+    let order_service = domain::order::service::DefaultOrderService::new(order_repository);
+
     tracing::info!(
         address = %config.address,
         fronendPath = %config.frontend_path,
         "Starting server"
     );
 
-    let services = http::AppState::new(
+    http::Router::new(
+        config,
         user_service,
+        token_coder,
         window_service,
-        token_hashers::JWTTokenCoder::new(
-            config.jwt_secret.clone(),
-            config.jwt_issuer.clone(),
-            config.jwt_audience.clone(),
-        ),
-        config.jwt_refresh_expiry,
-    );
-    let router = http::Router::new(config, services);
-
-    router.listen().await.unwrap();
+        order_service,
+    )
+    .listen()
+    .await
+    .unwrap();
 }

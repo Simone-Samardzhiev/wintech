@@ -2,7 +2,7 @@ use super::models::{Token, User, UserError};
 use uuid::Uuid;
 
 /// Provides access to persistent user data.
-pub trait UserRepository: Send + Sync + 'static {
+pub trait UserRepository: Send + Sync + Clone + 'static {
     /// Saves [`User`].
     ///
     /// # Errors
@@ -23,7 +23,7 @@ pub trait UserRepository: Send + Sync + 'static {
 }
 
 /// Provides access to persistence token data.
-pub trait TokenRepository: Send + Sync + 'static {
+pub trait TokenRepository: Send + Sync + Clone + 'static {
     /// Saves [`Token`]
     ///
     /// # Errors
@@ -38,10 +38,17 @@ pub trait TokenRepository: Send + Sync + 'static {
     ///
     /// [`UserError::Unknown`] if unexpected error occurs.
     fn delete(&self, id: Uuid) -> impl Future<Output = Result<(), UserError>> + Send;
+
+    /// Deletes all expired token.
+    ///
+    /// # Errors
+    ///
+    /// [`UserError::Unknown`] if unexpected error occurs.
+    fn delete_expired(&self) -> impl Future<Output = Result<(), UserError>> + Send;
 }
 
 /// Provides access to password hashing.
-pub trait PasswordHasher: Send + Sync + 'static {
+pub trait PasswordHasher: Send + Sync + Clone + 'static {
     /// Method to hash the password.
     ///
     /// # Returns
@@ -64,7 +71,7 @@ pub trait PasswordHasher: Send + Sync + 'static {
 }
 
 /// Provides access to token encoding and decoding.
-pub trait TokenCoder: Send + Sync + 'static {
+pub trait TokenCoder: Send + Sync + Clone + 'static {
     /// Encodes [`Token`].
     ///
     /// # Returns

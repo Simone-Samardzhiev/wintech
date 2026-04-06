@@ -1,6 +1,7 @@
 mod account;
 mod auth;
 mod home;
+mod orders;
 mod widgets;
 
 use leptos::{
@@ -69,6 +70,10 @@ fn App() -> impl IntoView {
                                     .href("/account")
                                     .children(ToChildren::to_children(|| "Account"))
                                     .build()),
+                                A(AProps::builder()
+                                    .href("/orders")
+                                    .children(ToChildren::to_children(|| "Orders"))
+                                    .build()),
                             )),
                             html_main().child(Routes(
                                 RoutesProps::builder()
@@ -85,6 +90,12 @@ fn App() -> impl IntoView {
                                                 RouteProps::builder()
                                                     .path(path!("/account"))
                                                     .view(account::Account)
+                                                    .build(),
+                                            ),
+                                            Route(
+                                                RouteProps::builder()
+                                                    .path(path!("/orders"))
+                                                    .view(orders::Orders)
                                                     .build(),
                                             ),
                                         )

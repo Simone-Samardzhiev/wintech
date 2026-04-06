@@ -64,8 +64,12 @@ pub fn Dashboard(token: String) -> impl IntoView {
     let windows = RwSignal::new(Vec::<Window>::new());
 
     spawn_local(async move {
-        let response =
-            auth::authenticate_request(&token, move || RequestBuilder::new("api/v1/windows")).await;
+        let response = auth::authenticate_request(
+            &token,
+            move || RequestBuilder::new("api/v1/windows"),
+            None::<()>,
+        )
+        .await;
 
         match response {
             Ok(res) => {
@@ -93,7 +97,7 @@ pub fn Dashboard(token: String) -> impl IntoView {
                 }
             }
             Err(error) => {
-                error!("Error refresh session: {}", error);
+                error!("Error refreshing session: {}", error);
                 context.token.set(None);
             }
         };

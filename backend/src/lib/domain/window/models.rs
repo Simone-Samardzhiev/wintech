@@ -3,12 +3,14 @@ use thiserror::Error;
 use time::Time;
 use uuid::Uuid;
 
+/// Possible errors from window validation
 #[derive(Error, Debug)]
 pub enum WindowValidationError {
     #[error("Invalid window preferred temperature: (min: {min}, max: {max}, actual: {actual})")]
     InvalidPreferredTemperature { min: i16, max: i16, actual: i16 },
 }
 
+/// Window related errors.
 #[derive(Error, Debug)]
 pub enum WindowError {
     #[error("Invalid window")]
@@ -21,6 +23,7 @@ pub enum WindowError {
     Unknown(#[from] anyhow::Error),
 }
 
+/// Valid preferred temperature.
 #[derive(Debug, Copy, Clone)]
 pub struct PreferredWindowTemp {
     temp: i16,
@@ -49,12 +52,7 @@ impl From<PreferredWindowTemp> for i16 {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum WindowActionKind {
-    Open,
-    Close,
-}
-
+/// Window entity.
 #[derive(Debug)]
 pub struct Window {
     pub id: Uuid,

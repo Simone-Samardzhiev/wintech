@@ -1,0 +1,104 @@
+.order-form {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.form-title {
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 1.5rem;
+    color: #111827;
+    font-weight: 600;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.input-group input {
+    padding: 10px 14px;
+    font-size: 1rem;
+    color: #1f2937;
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-group input:hover {
+    border-color: #9ca3af;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    background-color: #ffffff;
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #2563eb;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.submit-btn .progress-bar {
+    width: 16px;
+    height: 16px;
+}
+
+.submit-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.submit-btn:active {
+    transform: translateY(2px);
+}
+
+.order-complete-widget {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.5rem;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-width: 28rem;
+    margin: 2rem auto;
+}
+
+.order-complete-title {
+    color: #166534;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    margin-top: 0;
+}
+
+.order-complete-message {
+    color: #15803d;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+}

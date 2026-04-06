@@ -2,7 +2,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 /// Possible errors from user validation.
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Eq, PartialEq)]
 pub enum UserValidationError {
     #[error("Invalid email address")]
     InvalidEmailAddress,
@@ -64,7 +64,7 @@ pub enum UserError {
 }
 
 /// Valid username.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Username {
     name: String,
 }
@@ -100,7 +100,7 @@ impl From<Username> for String {
 }
 
 /// Valid user email.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct UserEmail {
     email: String,
 }
@@ -129,7 +129,7 @@ impl From<UserEmail> for String {
 }
 
 /// Valid not hashed user password.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct UserPassword {
     password: String,
 }
@@ -188,8 +188,8 @@ impl AsRef<str> for UserPassword {
     }
 }
 
-/// Valid user with hashed password.
-#[derive(Debug)]
+/// User entity.
+#[derive(Debug, PartialEq, Eq)]
 pub struct User {
     pub id: Uuid,
     pub name: Username,
@@ -230,7 +230,7 @@ impl User {
 }
 
 /// Request used to register a user.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct RegisterRequest {
     pub name: Username,
     pub email: UserEmail,
@@ -257,7 +257,7 @@ impl RegisterRequest {
 }
 
 /// Enum representing token types.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
     Access,
     Refresh,
@@ -284,7 +284,7 @@ impl TryFrom<&str> for TokenKind {
 }
 
 /// Valid user token.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     pub id: Uuid,
     pub kind: TokenKind,
@@ -304,7 +304,7 @@ impl Token {
 }
 
 /// Request used to log in.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
@@ -317,7 +317,7 @@ impl LoginRequest {
 }
 
 /// Struct holding refresh and access token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Tokens {
     pub access_token: String,
     pub refresh_token: String,
