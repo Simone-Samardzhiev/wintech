@@ -51,11 +51,13 @@ pub fn Login(set_mode: WriteSignal<AuthMode>) -> impl IntoView {
 
             if email.is_empty() {
                 error_msg.set(Some("Email cannot be empty.".to_string()));
+                is_loading.set(false);
                 return;
             }
 
             if password.is_empty() {
                 error_msg.set(Some("Password cannot be empty.".to_string()));
+                is_loading.set(false);
                 return;
             }
 
